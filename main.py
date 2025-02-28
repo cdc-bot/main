@@ -121,10 +121,13 @@ async def divorce(i,reason=None):
         MARRIAGES.remove(marriage)
         partner_u = await bot.fetch_user(partner)
         reason_text = "They haven't given a reason as to why."
+        reason_text2 = ""
         if reason != None:
             reason_text = "This was their reasoning: \"" + reason + "\""
+            reason_text2 = "> " + reason
         await partner_u.send(f"# Your partner has divorced you\n{i.author.mention} has divorced you. {reason_text}")
         await i.send(f"# Divorce succeded.\nYou've successfully divorced <@{partner}>.",ephemeral=True)
+        await i.author.send(f"# Divorced\nYou've divorced <@{partner}>\n{reason_text2}")
     else:
         await i.send(f"this isnt meant for u, ur not married yet!",ephemeral=True)
 
