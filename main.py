@@ -2,6 +2,7 @@ import disnake
 from disnake.ext import commands
 import os
 import random
+import json
 
 intents = disnake.Intents.all()
 bot = commands.Bot(intents=intents,command_prefix="cdc!")
@@ -13,7 +14,35 @@ SPAM_REDUCTION = []
 
 BEANED_LIST = []
 
-MARRIAGES = []
+def dump_marriages():
+    f = open("marriages.json","w")
+    c = json.dumps({
+        "marriages":MARRIAGES
+        },indent=4)
+    f.write(c)
+    f.close()
+
+
+def load_marriages():
+    f = None
+    r = []
+    try:
+        f = open("marriages.json")
+    except:
+        print("no marriage file")
+        return []
+    c = f.read()
+    try:
+        data = json.loads(c)
+        r = data["marriages"]
+    except:
+        print("invalid marriage file")
+    f.close()
+    return r
+
+
+MARRIAGES = load_marriages()
+
 
 WAITING_FOR_REACTION = []
 
@@ -69,6 +98,7 @@ def get_marriage(id):
 
 def create_marriage(person1,person2):
     MARRIAGES.append([person1,person2])
+    dump_marriages()
 
 async def remove_existing_proposals(person):
     for waiting in WAITING_FOR_REACTION:
@@ -108,7 +138,7 @@ async def on_reaction_add(reaction,user):
                     WAITING_FOR_REACTION.remove(waiting)
                     await remove_existing_proposals(user.id)
                     await reaction.message.reply(f"<@{waiting["initiator"]}> and <@{waiting["partner"]}> are now married! Congrats!! 🥳🥳")
-                    welcome_to_marriage = f"# Welcome to marriage!\n## So you got married! What now?\nSo, you HAVE to be loyal to each other! Any attempts at cheating (reacting to someone else,pinging someone else, proposing to someone else) will be sent in DMs to your partner!\nIf at any time things between you two are getting tense, you can always **/divorce**.\n\n-# Happy marriage! And remember that this is just a joke command and nothing serious, treat each other well :)"
+                    welcome_to_marriage = f"# Welcome to marriage!\n## So you got married! What now?\nSo, you HAVE to be loyal to each other! Any attempts at cheating (reacting to someone else, pinging someone else, proposing to someone else) will be sent in DMs to your partner!\nIf at any time things between you two are getting tense, you can always **/divorce**.\n\n-# Happy marriage! And remember that this is just a joke command and nothing serious, treat each other well :)\n-# Marriage: <@{waiting["initiator"]}> and <@{waiting["partner"]}> 💍"
                     await bot.get_user(waiting["initiator"]).send(welcome_to_marriage)
                     await bot.get_user(waiting["partner"]).send(welcome_to_marriage)
 
