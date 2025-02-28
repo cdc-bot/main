@@ -59,6 +59,14 @@ def get_partner(id):
                 return partner
     return None
 
+def get_marriage(id):
+    for marriage in MARRIAGES:
+        for partner in marriage:
+            if partner == id:
+                return marriage
+    return None
+
+
 def create_marriage(person1,person2):
     MARRIAGES.append([person1,person2])
 
@@ -98,6 +106,20 @@ async def on_reaction_add(reaction,user):
                     await reaction.message.reply(f"<@{waiting["initiator"]}> and <@{waiting["partner"]}> are now married! Congrats!! 🥳🥳")
 
 
+@bot.slash_command()
+async def divorce(i,reason=None):
+    if is_married(i.author.id):
+        partner = get_partner(i.author.id)
+        marriage = get_marriage(i.author.id)
+        MARRIAGES.remove(marriage)
+        partner_u = await bot.fetch_user(partner)
+        reason_text = "They haven't given a reason as to why."
+        if reason != None:
+            reason_text = "This was their reasoning: \"" + reason + "\""
+        await partner_u.send(f"# Your partner has divorced you\n{i.author.mention} has divorced you. {reason_text}")
+        await i.send(f"# Divorce succeded.\nYou've successfully divorced <@{partner}>.",ephemeral=True)
+
+        
                     
 
 @bot.slash_command()
