@@ -75,7 +75,7 @@ RESPONSES = {
         "what":["what are you confused about","?","huh","what","what?","i said nothing wrong.","i said what i said","u heard that right."],
         "no":["ok then","okay","oka","o","fine"]
 }
-NO_RESPONSE_SET = "i apologise, but i don't really know how to respond to that.."
+NO_RESPONSE_SET = "okay.. 😕_ _"
 
 def has_proposed(id):
     for waiting in WAITING_FOR_REACTION:
@@ -113,12 +113,16 @@ async def remove_existing_proposals(person):
         if waiting["type"] == "proposal":
             if waiting["initiator"] == person:
                 WAITING_FOR_REACTION.remove(waiting)
+                marriage_message = bot.get_message(waiting["id"])
+                await marriage_message.edit(content="Automatically closed due to marriage.")
+                await marriage_message.clear_reactions()
                 continue
             if waiting["partner"] == person:
                 WAITING_FOR_REACTION.remove(waiting)
                 marriage_message = bot.get_message(waiting["id"])
                 await marriage_message.reply(f"Dear <@{waiting["initiator"]}>, <@{waiting["partner"]}> got married, sorry..")
-                await marriage_message.delete()
+                await marriage_message.edit(content="Automatically closed due to marriage.")
+                await marriage_mesaage.clear_reactions()
 
 def should_reply(content,to_detect):
     content = str(content)
@@ -141,10 +145,33 @@ async def on_reaction_add(reaction,user):
     for waiting in WAITING_FOR_REACTION:
         if reaction.message.id == waiting["id"]:
             if waiting["type"] == "proposal":
+                if user.id != waiting["initiator"] and user.id != waiting["partner"] and user.id != bot.user.id:
+                    await reaction.remove(user)
+
+                if str(reaction.emoji) == "⛔" and user.id == waiting["initiator"]:
+                    await reaction.message.edit(content=f"<@{waiting["initiator"]}> has retracted their proposal.")
+                    await reaction.message.clear_reactions()
+                    WAITING_FOR_REACTION.remove(waiting)
+
+                if str(reaction.emoji) == "💍" and user.id == waiting["initiator"]:
+                    await reaction.remove(user)
+
+                if str(reaction.emoji) == "⛔" and user.id == waiting["partner"]:
+                    await reaction.message.edit(content=f"<@{waiting["partner"]}> has rejected this proposal. :broken_heart:")
+                    rejected_user = bot.get_user(waiting["initiator"])
+                    await rejected_user.send(f"# You've been rejected\nDear {rejected_user.mention}, <@{waiting["partner"]}> has rejected your proposal.. But don't fret! You'll find someone eventually...\n\n-# Message: {reaction.message.jump_url}")
+                    await reaction.message.clear_reactions()
+                    WAITING_FOR_REACTION.remove(waiting)
+                    
+
+
                 if str(reaction.emoji) == "💍" and user.id == waiting["partner"]:
+                    await reaction.message.edit(content=f"<@{waiting["partner"]}> has accepted your proposal! 🥳")
+                    await reaction.message.clear_reactions()
                     create_marriage(waiting["initiator"],waiting["partner"])
                     WAITING_FOR_REACTION.remove(waiting)
                     await remove_existing_proposals(user.id)
+                    await remove_existing_proposals(waiting["initiator"])
                     await reaction.message.reply(f"<@{waiting["initiator"]}> and <@{waiting["partner"]}> are now married! Congrats!! 🥳🥳")
                     welcome_to_marriage = f"# Welcome to marriage!\n## So you got married! What now?\nSo, you HAVE to be loyal to each other! Any attempts at cheating (reacting to someone else, pinging someone else, proposing to someone else) will be sent in DMs to your partner!\nIf at any time things between you two are getting tense, you can always **/divorce**.\n\n-# Happy marriage! And remember that this is just a joke command and nothing serious, treat each other well :)\n-# Marriage: <@{waiting["initiator"]}> and <@{waiting["partner"]}> 💍"
                     await bot.get_user(waiting["initiator"]).send(welcome_to_marriage)
@@ -166,6 +193,7 @@ async def divorce(i,reason=None):
         await partner_u.send(f"# Your partner has divorced you\n{i.author.mention} has divorced you. {reason_text}")
         await i.send(f"# Divorce succeded.\nYou've successfully divorced <@{partner}>.",ephemeral=True)
         await i.author.send(f"# Divorced\nYou've divorced <@{partner}>\n{reason_text2}")
+        dump_marriages()
     else:
         await i.send(f"this isnt meant for u, ur not married yet!",ephemeral=True)
 
@@ -194,9 +222,10 @@ async def propose(i,user: disnake.Member):
     if is_married(user.id):
         await i.send(f"{user} is already married.",ephemeral=True)
         return
-    await i.send(f"Dear {user.mention}, {i.author.mention} would like to marry you.\nReact with :ring: to get married!")
+    await i.send(f"Dear {user.mention}, {i.author.mention} would like to marry you.\nReact with :ring: to get married!\nReact with :no_entry: to reject/retract this proposal.")
     marriageStarter = await i.original_response()
     await marriageStarter.add_reaction("💍")
+    await marriageStarter.add_reaction("⛔")
     tempDict = {"id":marriageStarter.id,"type":"proposal","partner":user.id,"initiator":i.author.id}
     WAITING_FOR_REACTION.append(tempDict)
 
