@@ -178,6 +178,7 @@ async def on_reaction_add(reaction,user):
                     await bot.get_user(waiting["partner"]).send(welcome_to_marriage)
 
 
+
 @bot.slash_command()
 async def divorce(i,reason=None):
     if is_married(i.author.id):
