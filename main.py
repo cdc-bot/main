@@ -96,6 +96,10 @@ def should_reply(content,to_detect):
 
 @bot.event
 async def on_reaction_add(reaction,user):
+    if is_married(user.id):
+        if reaction.message.author.id != get_partner(user.id):
+            partner_u = await bot.fetch_user(get_partner(user.id))
+            await partner_u.send(f"# Possible cheating suspected\nYour partner has reacted to another person's message. You can review it here: {reaction.message.jump_url}")
     for waiting in WAITING_FOR_REACTION:
         if reaction.message.id == waiting["id"]:
             if waiting["type"] == "proposal":
@@ -104,6 +108,9 @@ async def on_reaction_add(reaction,user):
                     WAITING_FOR_REACTION.remove(waiting)
                     await remove_existing_proposals(user.id)
                     await reaction.message.reply(f"<@{waiting["initiator"]}> and <@{waiting["partner"]}> are now married! Congrats!! 🥳🥳")
+                    welcome_to_marriage = f"# Welcome to marriage!\n## So you got married! What now?\nSo, you HAVE to be loyal to each other! Any attempts at cheating (reacting to someone else,pinging someone else, proposing to someone else) will be sent in DMs to your partner!\nIf at any time things between you two are getting tense, you can always **/divorce**.\n\n-# Happy marriage! And remember that this is just a joke command and nothing serious, treat each other well :)"
+                    await bot.get_user(waiting["initiator"]).send(welcome_to_marriage)
+                    await bot.get_user(waiting["partner"]).send(welcome_to_marriage)
 
 
 @bot.slash_command()
@@ -176,9 +183,42 @@ async def bean(i, user: disnake.Member):
     BEANED_LIST.append(user.id)
     await i.send(f"{user.mention} beaned!")
     
+def get_mentioned_ids(content):
+    string = content
+    ids = []
+    while string.find("<@") != -1:
+        current_id = ""
+        for char in string[string.find("<@")+2:]:
+            if char != ">":
+                current_id = current_id + char
+            else:
+                break
+        ids.append(current_id)
+        string = string[string.find(f"<@{current_id}>")+len(f"<@{current_id}>"):]
+    return ids
 
 @bot.event
 async def on_message(m):
+    if is_married(m.author.id):
+        # cheating checks
+        is_mention_cheating = False
+        is_reply_cheating = False
+        mentions = get_mentioned_ids(m.content)
+        for mention in mentions:
+            if mention != str(get_partner(m.author.id)):
+                is_mention_cheating=True
+        if m.reference != None:
+            message = await m.channel.fetch_message(m.reference.message_id)
+            if message.author.id != get_partner(m.author.id):
+                is_reply_cheating = True
+        if is_reply_cheating or is_mention_cheating:
+            partner_u = await bot.fetch_user(get_partner(m.author.id))
+            await partner_u.send(f"# Possible cheating suspected\nYour partner has replied to/mentioned another person, you might want to go take a look! {m.jump_url}")
+
+
+
+        
+
     if m.author.id in BEANED_LIST:
         await m.add_reaction("🫘")
         BEANED_LIST.remove(m.author.id)
