@@ -50,11 +50,15 @@ FORMS = {
         "hi":["hi","hello"],
         "how are you":["how are you","how r you","how are u","how r u"],
         "im good":["im good","i'm good","im ok","i'm ok","i'm alright","im alright"],
-        ":3":[":3","uwu","owo",":3c"],
+        ":3":[":3","uwu","owo",":3c","nya","cat","kitty"],
         "im bad":["im bad","i'm bad","im horrible","i'm horrible"],
         "fuck you":["fuck you","screw you","you suck","i hate you"],
         "i love you":["i love you","ily","i love yoy"],
-        "geming furry?":["geming furry?","is geming a furry"]
+        "geming furry?":["geming furry?","is geming a furry"],
+        "marry me":["marry me","marry you","marry u","kiss me","hug me","fuck me"],
+        "yay":["yay","yippee","yaay","🥳"],
+        "what":["what","huh","wtf","what the fuck"],
+        "no":["no","nah","nope"]
         }
 
 RESPONSES = {
@@ -65,9 +69,13 @@ RESPONSES = {
         "im bad":["aww... i hope you feel better soon","hopefully the people here cheer you up!!","hey.. please, for me, turn that frown upside down!!!","oh damn."],
         "fuck you":["stfu","oh shut up.","why so rude?","im a bot bro"],
         "i love you":["it is not mutual","me too","😘", "i remember one day maybe was the first day of my life, you came to my heart my eyes wide open to you"],
-        "geming furry?":["idk","no?","maybe","yea :3","bro","hi tjc"]
+        "geming furry?":["idk","no?","maybe","yea :3","bro","hi tjc"],
+        "marry me":["uhh..","man, im a bot, i dont know anything about these topics","no thanks 💀","uh.. i cant","ok!!!!","sure, cmere bb","heeellll naww","😳","..oh?","huuh 🧐🧐","i literally cant."],
+        "yay":["yeeee!!!",":D","yippeee!!!!!!!!!",":colonThreeCat:\nif only i had that emoji.."],
+        "what":["what are you confused about","?","huh","what","what?","i said nothing wrong.","i said what i said","u heard that right."],
+        "no":["ok then","okay","oka","o","fine"]
 }
-NO_RESPONSE_SET = "i apologise, but i don't really know how to respond to that..\nmaybe i will be able to in the future though!"
+NO_RESPONSE_SET = "i apologise, but i don't really know how to respond to that.."
 
 def has_proposed(id):
     for waiting in WAITING_FOR_REACTION:
