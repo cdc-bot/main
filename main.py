@@ -13,6 +13,10 @@ SPAM_REDUCTION = []
 
 BEANED_LIST = []
 
+MARRIAGES = []
+
+WAITING_FOR_REACTION = []
+
 FORMS = {
         "hi":["hi","hello"],
         "how are you":["how are you","how r you","how are u","how r u"],
@@ -36,6 +40,40 @@ RESPONSES = {
 }
 NO_RESPONSE_SET = "i apologise, but i don't really know how to respond to that..\nmaybe i will be able to in the future though!"
 
+def has_proposed(id):
+    for waiting in WAITING_FOR_REACTION:
+        if waiting["initiator"] == id:
+            return True
+    return False
+
+def is_married(id):
+    for marriage in MARRIAGES:
+        if id in marriage:
+            return True
+    return False
+
+def get_partner(id):
+    for marriage in MARRIAGES:
+        for partner in marriage:
+            if partner != id:
+                return partner
+    return None
+
+def create_marriage(person1,person2):
+    MARRIAGES.append([person1,person2])
+
+async def remove_existing_proposals(person):
+    for waiting in WAITING_FOR_REACTION:
+        if waiting["type"] == "proposal":
+            if waiting["initiator"] == person:
+                WAITING_FOR_REACTION.remove(waiting)
+                continue
+            if waiting["partner"] == person:
+                WAITING_FOR_REACTION.remove(waiting)
+                marriage_message = bot.get_message(waiting["id"])
+                await marriage_message.reply(f"Dear <@{waiting["initiator"]}>, <@{waiting["partner"]}> got married, sorry..")
+                await marriage_message.delete()
+
 def should_reply(content,to_detect):
     content = str(content)
     is_phrase = (to_detect.find(" ") != -1)
@@ -48,6 +86,48 @@ def should_reply(content,to_detect):
                 return True
     return False
 
+@bot.event
+async def on_reaction_add(reaction,user):
+    for waiting in WAITING_FOR_REACTION:
+        if reaction.message.id == waiting["id"]:
+            if waiting["type"] == "proposal":
+                if str(reaction.emoji) == "💍" and user.id == waiting["partner"]:
+                    create_marriage(waiting["initiator"],waiting["partner"])
+                    WAITING_FOR_REACTION.remove(waiting)
+                    await remove_existing_proposals(user.id)
+                    await reaction.message.reply(f"<@{waiting["initiator"]}> and <@{waiting["partner"]}> are now married! Congrats!! 🥳🥳")
+
+
+                    
+
+@bot.slash_command()
+async def propose(i,user: disnake.Member):
+    if user.bot:
+        await i.send("listen, i know you're desperate.. BUT YOU CANT JUST MARRY A FUCKING BOT DUDE.",ephemeral=True)
+        return
+    if i.author.id == user.id:
+        await i.send("u cant marry yourself. how would that even work...?",ephemeral=True)
+        return
+    if has_proposed(i.author.id):
+        await i.send("chill! you've already proposed to someone!",ephemeral=True)
+        return
+    if is_married(i.author.id):
+        await i.send("you cheater, of course you cant marry them!!\nyour partner will be notified about this.",ephemeral=True)
+
+        partner_obj = await bot.fetch_user(get_partner(i.author.id))
+        await partner_obj.send(f"# Cheating notice\nYour partner, {i.author.mention} has just tried to propose to {user.mention}.\nYou can divorce them if you'd like by running **/divorce**")
+
+        return
+    if is_married(user.id):
+        await i.send(f"{user} is already married.",ephemeral=True)
+        return
+    await i.send(f"Dear {user.mention}, {i.author.mention} would like to marry you.\nReact with :ring: to get married!")
+    marriageStarter = await i.original_response()
+    await marriageStarter.add_reaction("💍")
+    tempDict = {"id":marriageStarter.id,"type":"proposal","partner":user.id,"initiator":i.author.id}
+    WAITING_FOR_REACTION.append(tempDict)
+
+    
 
 @bot.slash_command()
 async def who_am_i(i):
