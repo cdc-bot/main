@@ -10,6 +10,7 @@ bot = commands.Bot(intents=intents,command_prefix="cdc!")
 @bot.event
 async def on_ready():
     print("ready")
+        
 SPAM_REDUCTION = []
 
 BEANED_LIST = []
@@ -91,9 +92,11 @@ def is_married(id):
 
 def get_partner(id):
     for marriage in MARRIAGES:
-        for partner in marriage:
-            if partner != id:
-                return partner
+        if id in marriage:
+            for partner in marriage:
+                if partner != id:
+                    return partner
+            
     return None
 
 def get_marriage(id):
@@ -135,6 +138,15 @@ def should_reply(content,to_detect):
             if word == to_detect:
                 return True
     return False
+
+@bot.slash_command()
+async def marriages(i):
+    """See who's married!"""
+    marriages = ""
+    for marriage in MARRIAGES:
+        marriages = marriages + "\n" + f"<@{marriage[0]}> 💍 <@{marriage[1]}>"
+    await i.send(f"# Current marriages{marriages}",ephemeral=True)
+
 
 @bot.event
 async def on_reaction_add(reaction,user):
@@ -181,6 +193,7 @@ async def on_reaction_add(reaction,user):
 
 @bot.slash_command()
 async def divorce(i,reason=None):
+    """Divorce your partner if you feel that it's necessary. (only usable if married)"""
     if is_married(i.author.id):
         partner = get_partner(i.author.id)
         marriage = get_marriage(i.author.id)
@@ -204,6 +217,7 @@ async def divorce(i,reason=None):
 
 @bot.slash_command()
 async def propose(i,user: disnake.Member):
+    """Propose to someone, maybe you'll get married!"""
     if user.bot:
         await i.send("listen, i know you're desperate.. BUT YOU CANT JUST MARRY A FUCKING BOT DUDE.",ephemeral=True)
         return
