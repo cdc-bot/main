@@ -118,6 +118,9 @@ async def divorce(i,reason=None):
             reason_text = "This was their reasoning: \"" + reason + "\""
         await partner_u.send(f"# Your partner has divorced you\n{i.author.mention} has divorced you. {reason_text}")
         await i.send(f"# Divorce succeded.\nYou've successfully divorced <@{partner}>.",ephemeral=True)
+    else:
+        await i.send(f"this isnt meant for u, ur not married yet!",ephemeral=True)
+
 
         
                     
