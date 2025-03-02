@@ -248,7 +248,7 @@ async def opinion(i,a="hi"):
     if i.author.id == 708750647847157880 and a == "kill":
         await i.send("oki",ephemeral=True)
         exit()
-    random_responses = ["idk","a person","someone",i.author,"ur cool","ur stupid","a programmer.. maybe",":baby:"]
+    random_responses = ["idk","ur a person","ur someone","ur "+i.author,"ur cool","ur stupid","ur a programmer.. maybe",":baby:"]
     await i.send(random.choice(random_responses))
 
 @bot.slash_command()
