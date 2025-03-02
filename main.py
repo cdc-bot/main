@@ -125,7 +125,7 @@ async def remove_existing_proposals(person):
             if waiting["partner"] == person:
                 WAITING_FOR_REACTION.remove(waiting)
                 marriage_message = bot.get_message(waiting["id"])
-                await marriage_message.reply(f"Dear <@{waiting["initiator"]}>, <@{waiting["partner"]}> got married, sorry..")
+                await marriage_message.reply(f"Dear <@{waiting['initiator']}>, <@{waiting['partner']}> got married, sorry..")
                 await marriage_message.edit(content="Automatically closed due to marriage.")
                 await marriage_message.clear_reactions()
 
@@ -180,13 +180,13 @@ async def on_reaction_add(reaction,user):
 
 
                 if str(reaction.emoji) == "💍" and user.id == waiting["partner"]:
-                    await reaction.message.edit(content=f"<@{waiting["partner"]}> has accepted your proposal! 🥳")
+                    await reaction.message.edit(content=f"<@{waiting['partner']}> has accepted your proposal! 🥳")
                     await reaction.message.clear_reactions()
                     create_marriage(waiting["initiator"],waiting["partner"])
                     WAITING_FOR_REACTION.remove(waiting)
                     await remove_existing_proposals(user.id)
                     await remove_existing_proposals(waiting["initiator"])
-                    await reaction.message.reply(f"<@{waiting["initiator"]}> and <@{waiting["partner"]}> are now married! Congrats!! 🥳🥳")
+                    await reaction.message.reply(f"<@{waiting['initiator']}> and <@{waiting['partner']}> are now married! Congrats!! 🥳🥳")
                     welcome_to_marriage = f"# Welcome to marriage!\n## So you got married! What now?\nSo, you HAVE to be loyal to each other! Any attempts at cheating (reacting to someone else, pinging someone else, proposing to someone else) will be sent in DMs to your partner!\nIf at any time things between you two are getting tense, you can always **/divorce**.\n\n-# Happy marriage! And remember that this is just a joke command and nothing serious, treat each other well :)\n-# Marriage: <@{waiting['initiator']}> and <@{waiting['partner']}> 💍"
                     await bot.get_user(waiting["initiator"]).send(welcome_to_marriage)
                     await bot.get_user(waiting["partner"]).send(welcome_to_marriage)
