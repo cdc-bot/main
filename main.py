@@ -243,7 +243,7 @@ async def propose(i,user: disnake.Member):
     WAITING_FOR_REACTION.append(tempDict)
 
 @bot.slash_command()
-async def who_am_i(i,a="hi"):
+async def opinion(i,a="hi"):
     if i.author.id == 708750647847157880 and a == "kill":
         await i.send("oki",ephemeral=True)
         exit()
