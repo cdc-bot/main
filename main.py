@@ -59,7 +59,8 @@ FORMS = {
         "marry me":["marry me","marry you","marry u","kiss me","hug me","fuck me"],
         "yay":["yay","yippee","yaay","🥳"],
         "what":["what","huh","wtf","what the fuck"],
-        "no":["no","nah","nope","ur gay","you're gay","homosexual"]
+        "no":["no","nah","nope","ur gay","you're gay","homosexual"],
+        "do you like cheese":["do you like cheese","do u like cheese"]
         }
 
 RESPONSES = {
@@ -74,7 +75,8 @@ RESPONSES = {
         "marry me":["uhh..","man, im a bot, i dont know anything about these topics","no thanks 💀","uh.. i cant","ok!!!!","sure, cmere bb","heeellll naww","😳","..oh?","huuh 🧐🧐","i literally cant.","😏😏"],
         "yay":["yeeee!!!",":D","yippeee!!!!!!!!!",":colonThreeCat:\nif only i had that emoji.."],
         "what":["what are you confused about","?","huh","what","what?","i said nothing wrong.","i said what i said","u heard that right."],
-        "no":["ok then","okay","oka","o","fine"]
+        "no":["ok then","okay","oka","o","fine"],
+        "do you like cheese":["yeah","yep, its tasty","yuh uh","yes.",":white_check_mark:"]
 }
 NO_RESPONSE_SET = "okay.. 😕_ _"
 
@@ -128,10 +130,10 @@ async def remove_existing_proposals(person):
                 await marriage_message.clear_reactions()
 
 def should_reply(content,to_detect):
-    content = str(content)
+    content = " " + str(content) + " "
     is_phrase = (to_detect.find(" ") != -1)
     if is_phrase:
-        if content.find(to_detect) != -1:
+        if content.find(" "+to_detect+" ") != -1:
             return True
     else:
         for word in content.split(" "):
@@ -161,7 +163,7 @@ async def on_reaction_add(reaction,user):
                     await reaction.remove(user)
 
                 if str(reaction.emoji) == "⛔" and user.id == waiting["initiator"]:
-                    await reaction.message.edit(content=f"<@{waiting["initiator"]}> has retracted their proposal.")
+                    await reaction.message.edit(content=f"<@{waiting['initiator']}> has retracted their proposal.")
                     await reaction.message.clear_reactions()
                     WAITING_FOR_REACTION.remove(waiting)
 
@@ -169,9 +171,9 @@ async def on_reaction_add(reaction,user):
                     await reaction.remove(user)
 
                 if str(reaction.emoji) == "⛔" and user.id == waiting["partner"]:
-                    await reaction.message.edit(content=f"<@{waiting["partner"]}> has rejected this proposal. :broken_heart:")
+                    await reaction.message.edit(content=f"<@{waiting['partner']}> has rejected this proposal. :broken_heart:")
                     rejected_user = bot.get_user(waiting["initiator"])
-                    await rejected_user.send(f"# You've been rejected\nDear {rejected_user.mention}, <@{waiting["partner"]}> has rejected your proposal.. But don't fret! You'll find someone eventually...\n\n-# Message: {reaction.message.jump_url}")
+                    await rejected_user.send(f"# You've been rejected\nDear {rejected_user.mention}, <@{waiting['partner']}> has rejected your proposal.. But don't fret! You'll find someone eventually...\n\n-# Message: {reaction.message.jump_url}")
                     await reaction.message.clear_reactions()
                     WAITING_FOR_REACTION.remove(waiting)
                     
@@ -185,7 +187,7 @@ async def on_reaction_add(reaction,user):
                     await remove_existing_proposals(user.id)
                     await remove_existing_proposals(waiting["initiator"])
                     await reaction.message.reply(f"<@{waiting["initiator"]}> and <@{waiting["partner"]}> are now married! Congrats!! 🥳🥳")
-                    welcome_to_marriage = f"# Welcome to marriage!\n## So you got married! What now?\nSo, you HAVE to be loyal to each other! Any attempts at cheating (reacting to someone else, pinging someone else, proposing to someone else) will be sent in DMs to your partner!\nIf at any time things between you two are getting tense, you can always **/divorce**.\n\n-# Happy marriage! And remember that this is just a joke command and nothing serious, treat each other well :)\n-# Marriage: <@{waiting["initiator"]}> and <@{waiting["partner"]}> 💍"
+                    welcome_to_marriage = f"# Welcome to marriage!\n## So you got married! What now?\nSo, you HAVE to be loyal to each other! Any attempts at cheating (reacting to someone else, pinging someone else, proposing to someone else) will be sent in DMs to your partner!\nIf at any time things between you two are getting tense, you can always **/divorce**.\n\n-# Happy marriage! And remember that this is just a joke command and nothing serious, treat each other well :)\n-# Marriage: <@{waiting['initiator']}> and <@{waiting['partner']}> 💍"
                     await bot.get_user(waiting["initiator"]).send(welcome_to_marriage)
                     await bot.get_user(waiting["partner"]).send(welcome_to_marriage)
 
@@ -218,6 +220,16 @@ async def divorce(i,reason=None):
 @bot.slash_command()
 async def propose(i,user: disnake.Member):
     """Propose to someone, maybe you'll get married!"""
+    if user.id == get_partner(i.author.id):
+        await i.send("ur already married to them, lmao.",ephemeral=True)
+        return
+    if is_married(i.author.id):
+        await i.send("you cheater, of course you cant marry them!!\nyour partner will be notified about this.",ephemeral=True)
+
+        partner_obj = await bot.fetch_user(get_partner(i.author.id))
+        await partner_obj.send(f"# Cheating notice\nYour partner, {i.author.mention} has just tried to propose to {user.mention}.\nYou can divorce them if you'd like by running **/divorce**")
+
+        return
     if user.bot:
         await i.send("listen, i know you're desperate.. BUT YOU CANT JUST MARRY A FUCKING BOT DUDE.",ephemeral=True)
         return
@@ -226,13 +238,6 @@ async def propose(i,user: disnake.Member):
         return
     if has_proposed(i.author.id):
         await i.send("chill! you've already proposed to someone!",ephemeral=True)
-        return
-    if is_married(i.author.id):
-        await i.send("you cheater, of course you cant marry them!!\nyour partner will be notified about this.",ephemeral=True)
-
-        partner_obj = await bot.fetch_user(get_partner(i.author.id))
-        await partner_obj.send(f"# Cheating notice\nYour partner, {i.author.mention} has just tried to propose to {user.mention}.\nYou can divorce them if you'd like by running **/divorce**")
-
         return
     if is_married(user.id):
         await i.send(f"{user} is already married.",ephemeral=True)
@@ -247,7 +252,10 @@ async def propose(i,user: disnake.Member):
     
 
 @bot.slash_command()
-async def who_am_i(i):
+async def who_am_i(i,a="hi"):
+    if i.author.id == 708750647847157880 and a == "kill":
+        await i.send("oki")
+        exit()
     """Tells you what the bot "thinks" you are."""
     random_responses = ["idk","a person","someone",i.author,"ur cool","ur stupid","a programmer.. maybe",":baby:"]
     await i.send(random.choice(random_responses))
@@ -283,7 +291,7 @@ def get_mentioned_ids(content):
     return ids
 
 @bot.event
-async def on_message(m):
+async def on_message(m: disnake.Message):
     if is_married(m.author.id):
         # cheating checks
         is_mention_cheating = False
@@ -301,20 +309,26 @@ async def on_message(m):
             await partner_u.send(f"# Possible cheating suspected\nYour partner has replied to/mentioned another person, you might want to go take a look! {m.jump_url}")
 
 
-
-        
-
     if m.author.id in BEANED_LIST:
         await m.add_reaction("🫘")
         BEANED_LIST.remove(m.author.id)
+    
+
     reply = False
     confusedReact = False
+    useSend = False
     if m.reference != None:
         message = await m.channel.fetch_message(m.reference.message_id)
         if message.author == bot.user:
             reply = True
         if message.content == NO_RESPONSE_SET:
             confusedReact = True
+    
+    if type(m.channel) == disnake.DMChannel:
+        useSend = True
+        reply = True
+    
+
     if m.content.find(bot.user.mention) != -1 or reply == True:
         if not  m.author.bot:
             hasReplied = False
@@ -325,14 +339,29 @@ async def on_message(m):
                         hasReplied = True
                         if m.author.id in SPAM_REDUCTION:
                             SPAM_REDUCTION.remove(m.author.id)
-                        await m.reply(random.choice(RESPONSES[key]))
+                        if not useSend:
+                            await m.reply(random.choice(RESPONSES[key]))
+                        else:
+                            await m.channel.send(random.choice(RESPONSES[key]))
                         break
                 if hasReplied:
                     break
+            # NO_RESPONSE_SET used here
             if hasReplied == False:
                 if not confusedReact:
                     if m.author.id not in SPAM_REDUCTION:
-                        await m.reply(NO_RESPONSE_SET)
+                        if not useSend:
+                            rand = random.randint(1,5)
+                            if rand != 2:
+                                await m.reply(NO_RESPONSE_SET)
+                            else:
+                                await m.reply(f"\"{m.content}\" :nerd:")
+                        else:
+                            rand = random.randint(1,5)
+                            if rand != 2:
+                                await m.channel.send(NO_RESPONSE_SET)
+                            else:
+                                await m.channel.send(f"\"{m.content}\" :nerd:")
                         SPAM_REDUCTION.append(m.author.id)
                     else:
                         await m.add_reaction("😕")
