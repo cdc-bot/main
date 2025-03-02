@@ -244,10 +244,10 @@ async def propose(i,user: disnake.Member):
 
 @bot.slash_command()
 async def opinion(i,a="hi"):
+    """Tells you what the bot "thinks" you are."""
     if i.author.id == 708750647847157880 and a == "kill":
         await i.send("oki",ephemeral=True)
         exit()
-    """Tells you what the bot "thinks" you are."""
     random_responses = ["idk","a person","someone",i.author,"ur cool","ur stupid","a programmer.. maybe",":baby:"]
     await i.send(random.choice(random_responses))
 
