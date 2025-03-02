@@ -60,7 +60,8 @@ FORMS = {
         "yay":["yay","yippee","yaay","🥳"],
         "what":["what","huh","wtf","what the fuck"],
         "no":["no","nah","nope","ur gay","you're gay","homosexual"],
-        "do you like cheese":["do you like cheese","do u like cheese"]
+        "do you like cheese":["do you like cheese","do u like cheese"],
+        "ur hot":["ur hot","you're hot","ur pretty","you're pretty","you're kinda hot"]
         }
 
 RESPONSES = {
@@ -76,7 +77,8 @@ RESPONSES = {
         "yay":["yeeee!!!",":D","yippeee!!!!!!!!!",":colonThreeCat:\nif only i had that emoji.."],
         "what":["what are you confused about","?","huh","what","what?","i said nothing wrong.","i said what i said","u heard that right."],
         "no":["ok then","okay","oka","o","fine"],
-        "do you like cheese":["yeah","yep, its tasty","yuh uh","yes.",":white_check_mark:"]
+        "do you like cheese":["yeah","yep, its tasty","yuh uh","yes.",":white_check_mark:"],
+        "ur hot":["ty","i know","thanks!!","eeeh... okay??"]
 }
 NO_RESPONSE_SET = "okay.. 😕_ _"
 
