@@ -61,7 +61,8 @@ FORMS = {
         "what":["what","huh","wtf","what the fuck"],
         "no":["no","nah","nope","ur gay","you're gay","homosexual"],
         "do you like cheese":["do you like cheese","do u like cheese"],
-        "ur hot":["ur hot","you're hot","ur pretty","you're pretty","you're kinda hot"]
+        "ur hot":["ur hot","you're hot","ur pretty","you're pretty","you're kinda hot"],
+        "skill issue":["skill issue"]
         }
 
 RESPONSES = {
@@ -78,7 +79,8 @@ RESPONSES = {
         "what":["what are you confused about","?","huh","what","what?","i said nothing wrong.","i said what i said","u heard that right."],
         "no":["ok then","okay","oka","o","fine"],
         "do you like cheese":["yeah","yep, its tasty","yuh uh","yes.",":white_check_mark:"],
-        "ur hot":["ty","i know","thanks!!","eeeh... okay??"]
+        "ur hot":["ty","i know","thanks!!","eeeh... okay??"],
+        "skill issue":["kys","kill yourself","die","ok vro","fucking kill yourself"]
 }
 NO_RESPONSE_SET = "okay.. 😕_ _"
 
