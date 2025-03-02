@@ -149,7 +149,6 @@ async def marriages(i):
         marriages = marriages + "\n" + f"<@{marriage[0]}> 💍 <@{marriage[1]}>"
     await i.send(f"# Current marriages{marriages}",ephemeral=True)
 
-
 @bot.event
 async def on_reaction_add(reaction,user):
     if is_married(user.id):
@@ -191,8 +190,6 @@ async def on_reaction_add(reaction,user):
                     await bot.get_user(waiting["initiator"]).send(welcome_to_marriage)
                     await bot.get_user(waiting["partner"]).send(welcome_to_marriage)
 
-
-
 @bot.slash_command()
 async def divorce(i,reason=None):
     """Divorce your partner if you feel that it's necessary. (only usable if married)"""
@@ -212,10 +209,6 @@ async def divorce(i,reason=None):
         dump_marriages()
     else:
         await i.send(f"this isnt meant for u, ur not married yet!",ephemeral=True)
-
-
-        
-                    
 
 @bot.slash_command()
 async def propose(i,user: disnake.Member):
@@ -248,8 +241,6 @@ async def propose(i,user: disnake.Member):
     await marriageStarter.add_reaction("⛔")
     tempDict = {"id":marriageStarter.id,"type":"proposal","partner":user.id,"initiator":i.author.id}
     WAITING_FOR_REACTION.append(tempDict)
-
-    
 
 @bot.slash_command()
 async def who_am_i(i,a="hi"):
