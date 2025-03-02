@@ -303,7 +303,7 @@ async def on_message(m: disnake.Message):
 
 
     if m.author.id in BEANED_LIST:
-        await m.add_reaction("🫘")
+        await m.add_reaction("<:bean:1345818012879552605>")
         BEANED_LIST.remove(m.author.id)
     
 
