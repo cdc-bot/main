@@ -82,7 +82,8 @@ FORMS = {
         "no":["no","nah","nope","ur gay","you're gay","homosexual"],
         "do you like cheese":["do you like cheese","do u like cheese"],
         "ur hot":["ur hot","you're hot","ur pretty","you're pretty","you're kinda hot"],
-        "skill issue":["skill issue"]
+        "skill issue":["skill issue"],
+        "np":["np","no problem","you're welcome","ur welcome"]
         }
 
 RESPONSES = {
@@ -100,7 +101,8 @@ RESPONSES = {
         "no":["ok then","okay","oka","o","fine"],
         "do you like cheese":["yeah","yep, its tasty","yuh uh","yes.",":white_check_mark:"],
         "ur hot":["ty","i know","thanks!!","eeeh... okay??"],
-        "skill issue":["kys","kill yourself","die","ok vro","fucking kill yourself"]
+        "skill issue":["kys","kill yourself","die","ok vro","fucking kill yourself"],
+        "np":["ye ye ye ye","okii","lol",":3",":D"]
 }
 NO_RESPONSE_SET = "okay.. 😕_ _"
 
@@ -370,7 +372,7 @@ async def on_message(m: disnake.Message):
                             if rand != 2:
                                 await m.reply(NO_RESPONSE_SET)
                             else:
-                                await m.reply(f"\"{m.content}\" :nerd:")
+                                await m.reply(f"\"{m.content}\" :nerd:",allowed_mentions=disnake.AllowedMentions.none)
                         else:
                             rand = random.randint(1,5)
                             if rand != 2:
