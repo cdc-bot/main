@@ -104,7 +104,7 @@ RESPONSES = {
         "skill issue":["kys","kill yourself","die","ok vro","fucking kill yourself"],
         "np":["ye ye ye ye","okii","lol",":3",":D"]
 }
-NO_RESPONSE_SET = "okay.. 😕_ _"
+NO_RESPONSE_SET = ":fish:"
 
 def has_proposed(id):
     for waiting in WAITING_FOR_REACTION:
