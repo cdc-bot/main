@@ -338,7 +338,7 @@ async def on_message(m: disnake.Message):
         message = await m.channel.fetch_message(m.reference.message_id)
         if message.author == bot.user:
             reply = True
-        if message.content == NO_RESPONSE_SET:
+        if message.content == NO_RESPONSE_SET and message.author == bot.user:
             confusedReact = True
     
     if type(m.channel) == disnake.DMChannel:
