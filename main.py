@@ -1,5 +1,5 @@
 import disnake
-from disnake.ext import commands
+from disnake.ext import commands, tasks
 import os
 import random
 import json
@@ -7,9 +7,15 @@ import json
 intents = disnake.Intents.all()
 bot = commands.Bot(intents=intents,command_prefix="cdc!")
 
+@tasks.loop(seconds=10)
+async def status_change():
+    activity = disnake.Activity(type=disnake.ActivityType.custom,name="custom",state="this is custom status i think")
+    await bot.change_presence(status=disnake.Status.online,activity=activity)
+
 @bot.event
 async def on_ready():
     print("ready")
+    status_change.start()
         
 SPAM_REDUCTION = []
 
