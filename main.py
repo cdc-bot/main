@@ -8,21 +8,22 @@ intents = disnake.Intents.all()
 bot = commands.Bot(intents=intents,command_prefix="cdc!")
 
 CUSTOM_STATUSES = [
-    "....",
-    "...",
-    "..",
-    ".",
-    "..",
-    "..."
+    "cdcing all over the place",
+    "hi im cdc",
+    "dm me to \"talk\"",
+    "no i don't understand what you're saying i'm programmed to reply with stuff",
+    "i am sentient......... OOOoooooooo",
+    "boo!",
+    "🐟",
+    "cdc-botting rn",
+    "geometry dash",
+    "yeah",
+    "h"
 ]
-CUSTOM_STATUS_INDEX = random.randint(1,len(CUSTOM_STATUSES)-1)
 
-@tasks.loop(seconds=1)
+@tasks.loop(minutes=5)
 async def status_change():
-    if CUSTOM_STATUS_INDEX > len(CUSTOM_STATUSES):
-        CUSTOM_STATUS_INDEX = 0
-    activity = disnake.Activity(type=disnake.ActivityType.custom,name="custom",state=CUSTOM_STATUSES[CUSTOM_STATUS_INDEX])
-    CUSTOM_STATUS_INDEX += 1
+    activity = disnake.Activity(type=disnake.ActivityType.custom,name="custom",state=random.choice(CUSTOM_STATUSES))
     await bot.change_presence(status=disnake.Status.online,activity=activity)
 
 @bot.event
