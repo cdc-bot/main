@@ -309,6 +309,9 @@ def get_mentioned_ids(content):
 
 @bot.event
 async def on_message(m: disnake.Message):
+    if not m.author.bot and should_reply(m.content.lower(),"what"):
+        await m.reply("https://discord.com/channels/1268365327058599968/1268366940037189684/1353889119788335175")
+        return;
     if is_married(m.author.id):
         # cheating checks
         is_mention_cheating = False
