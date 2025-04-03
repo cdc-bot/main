@@ -269,9 +269,9 @@ async def propose(i,user: disnake.Member):
     WAITING_FOR_REACTION.append(tempDict)
 
 @bot.slash_command()
-async def opinion(i,a="hi"):
+async def opinion(i):
     """Tells you what the bot "thinks" you are."""
-    if i.author.id == 708750647847157880 and a == "kill":
+    if i.author.id == 708750647847157880:
         await i.send("oki",ephemeral=True)
         exit()
     random_responses = ["idk","ur a person","ur someone",f"ur {i.author}","ur cool","ur stupid","ur a programmer.. maybe",":baby:"]
