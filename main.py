@@ -313,6 +313,9 @@ def get_mentioned_ids(content):
 
 @bot.slash_command()
 async def manual_c3_trigger(i):
+    global COLONTHREE_MODE
+    global COLONTHREE_STARTER
+    global COLONTHREE_CHANNEL
     if i.author.id != 708750647847157880:
         await i.send("you can't use this, sorry :3",ephemeral=True)
     msg = await i.channel.send("a wild :3 appeared! the next 5 messages must be :3 (you can't send two messages in a row, that's cheating)")
