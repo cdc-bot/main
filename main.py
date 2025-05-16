@@ -316,20 +316,22 @@ async def on_message(m: disnake.Message):
     global COLONTHREE_MODE
     global COLONTHREE_STARTER
     global COLONTHREE_CHANNEL
-    if m.content == ":3 :3 :3" and COLONTHREE_MODE == False:
-        msg = await m.channel.send("A wild :3 appeared, the next 5 messages must be :3")
+    if random.randint(0,50) == 25 and COLONTHREE_MODE == False:
+        msg = await m.channel.send("A wild :3 appeared, the next 5 messages must be :3\n- And by different people..")
         COLONTHREE_MODE = True
         COLONTHREE_STARTER = msg.id
         COLONTHREE_CHANNEL = m.channel.id
 
     if COLONTHREE_MODE == True and m.channel.id == COLONTHREE_CHANNEL:
         c3followed = 0
+        c3prev = 0
         async for message in m.channel.history(limit=5):
             if m.channel.id != COLONTHREE_CHANNEL or message.id < COLONTHREE_STARTER:
                 continue
             if message.author == bot.user:
                 continue
-            if message.content == ":3":
+            if message.content == ":3" and message.author.id != c3prev:
+                c3prev = message.author.id
                 c3followed += 1
             else:
                 print(message.content)
