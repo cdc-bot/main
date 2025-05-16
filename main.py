@@ -7,6 +7,8 @@ import json
 intents = disnake.Intents.all()
 bot = commands.Bot(intents=intents,command_prefix="cdc!")
 
+COLONTHREE_MODE = False
+
 CUSTOM_STATUSES = [
     "cdcing all over the place",
     "hi im cdc",
@@ -309,10 +311,37 @@ def get_mentioned_ids(content):
 
 @bot.event
 async def on_message(m: disnake.Message):
+<<<<<<< HEAD
     #if m.channel.id == 1268366668384440352 and not m.author.bot and should_reply(m.content.lower(),"ping"):
     #    await m.reply("https://discord.com/channels/1268365327058599968/1268366940037189684/1353889119788335175")
     #    return # damage control
 
+=======
+    global COLONTHREE_MODE
+    if random.randint(0,10) == 5 and COLONTHREE_MODE == False:
+        await m.channel.send("A wild :3 appeared, the next 5 messages must be :3")
+        COLONTHREE_MODE = True
+
+    if COLONTHREE_MODE == True:
+        c3followed = 0
+        async for message in m.channel.history(limit=5):
+            if message.author == bot.user:
+                continue
+            if message.content == ":3":
+                c3followed += 1
+            else:
+                print(message.content)
+                c3followed -= 1
+                await message.delete()
+                break
+        if c3followed == 5:
+            COLONTHREE_MODE = False
+            await m.channel.send("good job, you're very :3, the :3 left.. for now :3")
+        
+    if m.channel.id == 1268366668384440352 and not m.author.bot and should_reply(m.content.lower(),"ping"):
+        await m.reply("https://discord.com/channels/1268365327058599968/1268366940037189684/1353889119788335175")
+        return;
+>>>>>>> ffe3d5f (:3 mode)
     if is_married(m.author.id):
         # cheating checks
         is_mention_cheating = False
