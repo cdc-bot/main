@@ -317,7 +317,7 @@ async def on_message(m: disnake.Message):
     global COLONTHREE_STARTER
     global COLONTHREE_CHANNEL
     if random.randint(0,50) == 25 and COLONTHREE_MODE == False:
-        msg = await m.channel.send("A wild :3 appeared, the next 5 messages must be :3\n- And by different people..")
+        msg = await m.channel.send("a wild :3 appeared! the next 5 messages must be :3 (you can't send two messages in a row, that's cheating)")
         COLONTHREE_MODE = True
         COLONTHREE_STARTER = msg.id
         COLONTHREE_CHANNEL = m.channel.id
@@ -340,11 +340,7 @@ async def on_message(m: disnake.Message):
                 break
         if c3followed == 5:
             COLONTHREE_MODE = False
-            await m.channel.send("good job, you're very :3, the :3 left.. for now :3")
-        
-    if m.channel.id == 1268366668384440352 and not m.author.bot and should_reply(m.content.lower(),"ping"):
-        await m.reply("https://discord.com/channels/1268365327058599968/1268366940037189684/1353889119788335175")
-        return;
+            await m.channel.send("good job! you're all very :3, the :3 left.. for now....")
     if is_married(m.author.id):
         # cheating checks
         is_mention_cheating = False
