@@ -317,7 +317,7 @@ async def manual_c3_trigger(i):
         await i.send("you can't use this, sorry :3",ephemeral=True)
     msg = await i.channel.send("a wild :3 appeared! the next 5 messages must be :3 (you can't send two messages in a row, that's cheating)")
     COLONTHREE_MODE = True
-    COLONTHREE_STARTER = i.id
+    COLONTHREE_STARTER = msg.id
     COLONTHREE_CHANNEL = i.channel.id
     await i.send("triggered",ephemeral=True)
 
