@@ -310,13 +310,7 @@ def get_mentioned_ids(content):
     return ids
 
 @bot.event
-async def on_message(m: disnake.Message):
-<<<<<<< HEAD
-    #if m.channel.id == 1268366668384440352 and not m.author.bot and should_reply(m.content.lower(),"ping"):
-    #    await m.reply("https://discord.com/channels/1268365327058599968/1268366940037189684/1353889119788335175")
-    #    return # damage control
-
-=======
+    async def on_message(m: disnake.Message):
     global COLONTHREE_MODE
     if random.randint(0,10) == 5 and COLONTHREE_MODE == False:
         await m.channel.send("A wild :3 appeared, the next 5 messages must be :3")
@@ -341,7 +335,6 @@ async def on_message(m: disnake.Message):
     if m.channel.id == 1268366668384440352 and not m.author.bot and should_reply(m.content.lower(),"ping"):
         await m.reply("https://discord.com/channels/1268365327058599968/1268366940037189684/1353889119788335175")
         return;
->>>>>>> ffe3d5f (:3 mode)
     if is_married(m.author.id):
         # cheating checks
         is_mention_cheating = False
