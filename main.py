@@ -8,6 +8,8 @@ intents = disnake.Intents.all()
 bot = commands.Bot(intents=intents,command_prefix="cdc!")
 
 COLONTHREE_MODE = False
+COLONTHREE_CHANNEL = 0
+COLONTHREE_STARTER = 0
 
 CUSTOM_STATUSES = [
     "cdcing all over the place",
@@ -312,13 +314,19 @@ def get_mentioned_ids(content):
 @bot.event
 async def on_message(m: disnake.Message):
     global COLONTHREE_MODE
+    global COLONTHREE_STARTER
+    global COLONTHREE_CHANNEL
     if random.randint(0,10) == 5 and COLONTHREE_MODE == False:
-        await m.channel.send("A wild :3 appeared, the next 5 messages must be :3")
+        msg = await m.channel.send("A wild :3 appeared, the next 5 messages must be :3")
         COLONTHREE_MODE = True
+        COLONTHREE_STARTER = msg.id
+        COLONTHREE_CHANNEL = m.channel.id
 
-    if COLONTHREE_MODE == True:
+    if COLONTHREE_MODE == True and m.channel == COLONTHREE_CHANNEL:
         c3followed = 0
         async for message in m.channel.history(limit=5):
+            if message.channel.id != COLONTHREE_CHANNEL or message.id < COLONTHREE_STARTER:
+                continue
             if message.author == bot.user:
                 continue
             if message.content == ":3":
