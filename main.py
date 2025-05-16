@@ -5,7 +5,7 @@ import random
 import json
 
 intents = disnake.Intents.all()
-bot = commands.Bot(intents=intents,command_prefix="cdc!")
+bot = commands.Bot(intents=intents,command_prefix="cdc!",test_guilds=[1268365327058599968])
 
 COLONTHREE_MODE = False
 COLONTHREE_CHANNEL = 0
@@ -65,8 +65,26 @@ def load_marriages():
     f.close()
     return r
 
+def load_wallets():
+    f = None
+    r = []
+    try:
+        f = open("wallets.json")
+    except:
+        print("no wallets file")
+        return {}
+    c = f.read()
+    try:
+        data = json.loads(c)
+        r = data["wallets"]
+    except:
+        print("invalid wallets file")
+    f.close()
+    return r
+
 
 MARRIAGES = load_marriages()
+WALLETS = load_wallets()
 
 
 WAITING_FOR_REACTION = []
@@ -330,7 +348,7 @@ async def on_message(m: disnake.Message):
     global COLONTHREE_MODE
     global COLONTHREE_STARTER
     global COLONTHREE_CHANNEL
-    if random.randint(0,50) == 25 and COLONTHREE_MODE == False:
+    if random.randint(0,100) == 25 and COLONTHREE_MODE == False:
         msg = await m.channel.send("a wild :3 appeared! the next 5 messages must be :3 (you can't send two messages in a row, that's cheating)")
         COLONTHREE_MODE = True
         COLONTHREE_STARTER = msg.id
@@ -434,4 +452,16 @@ async def on_message(m: disnake.Message):
                     except:
                         print(f"couldnt react to {m.author}, probably blocked")
 
+@bot.slash_command()
+async def gamble(i):
+    increase1 = random.randint(-300,500)
+    increase2 = random.randint(0,100)
+    if WALLETS.index(i.author.id) != -1:
+        WALLETS[i.author.id] += increase1
+        await i.send(f"you spun the wheel.... your balance has {'increased' if increase1 > 0 else 'decreased'} by {increase1}\nyou now have {WALLETS[i.author.id]}")
+    else:
+        WALLETS[i.author.id] = random.randint(0,100)
+        await i.send(f"you spun the wheel.... your balance has increased by {increase2}\nyou now have {WALLETS[i.author.id]}")
+
+exit()
 bot.run(os.environ["CDC_TOKEN"])
