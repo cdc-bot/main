@@ -322,7 +322,7 @@ async def on_message(m: disnake.Message):
         COLONTHREE_STARTER = msg.id
         COLONTHREE_CHANNEL = m.channel.id
 
-    if COLONTHREE_MODE == True and m.channel == COLONTHREE_CHANNEL:
+    if COLONTHREE_MODE == True and m.channel.id == COLONTHREE_CHANNEL:
         c3followed = 0
         async for message in m.channel.history(limit=5):
             if m.channel.id != COLONTHREE_CHANNEL or message.id < COLONTHREE_STARTER:
