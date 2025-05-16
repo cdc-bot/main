@@ -311,6 +311,16 @@ def get_mentioned_ids(content):
         string = string[string.find(f"<@{current_id}>")+len(f"<@{current_id}>"):]
     return ids
 
+@bot.slash_command()
+async def manual_c3_trigger(i):
+    if i.author.id != 708750647847157880:
+        await i.send("you can't use this, sorry :3",ephemeral=True)
+    msg = await i.channel.send("a wild :3 appeared! the next 5 messages must be :3 (you can't send two messages in a row, that's cheating)")
+    COLONTHREE_MODE = True
+    COLONTHREE_STARTER = i.id
+    COLONTHREE_CHANNEL = i.channel.id
+    await i.send("triggered",ephemeral=True)
+
 @bot.event
 async def on_message(m: disnake.Message):
     global COLONTHREE_MODE
