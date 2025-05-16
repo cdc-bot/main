@@ -310,7 +310,7 @@ def get_mentioned_ids(content):
     return ids
 
 @bot.event
-    async def on_message(m: disnake.Message):
+async def on_message(m: disnake.Message):
     global COLONTHREE_MODE
     if random.randint(0,10) == 5 and COLONTHREE_MODE == False:
         await m.channel.send("A wild :3 appeared, the next 5 messages must be :3")
