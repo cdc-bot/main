@@ -361,7 +361,7 @@ async def on_message(m: disnake.Message):
     global COLONTHREE_MODE
     global COLONTHREE_STARTER
     global COLONTHREE_CHANNEL
-    if random.randint(0,100) == 25 and COLONTHREE_MODE == False:
+    if random.randint(0,1000) == 425 and COLONTHREE_MODE == False:
         msg = await m.channel.send("a wild :3 appeared! the next 5 messages must be :3 (you can't send two messages in a row, that's cheating)")
         COLONTHREE_MODE = True
         COLONTHREE_STARTER = msg.id
