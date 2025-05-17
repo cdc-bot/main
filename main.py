@@ -84,7 +84,6 @@ def load_wallets():
 
 
 MARRIAGES = load_marriages()
-WALLETS = load_wallets()
 
 
 WAITING_FOR_REACTION = []
@@ -463,5 +462,5 @@ async def on_message(m: disnake.Message):
     #   WALLETS[i.author.id] = random.randint(0,100)
     #   await i.send(f"you spun the wheel.... your balance has increased by {increase2}\nyou now have {WALLETS[i.author.id]}")
 
-exit()
+# exit()
 bot.run(os.environ["CDC_TOKEN"])
