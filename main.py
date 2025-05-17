@@ -2,10 +2,11 @@ import disnake
 from disnake.ext import commands, tasks
 import os
 import random
+import time
 import json
 
 intents = disnake.Intents.all()
-bot = commands.Bot(intents=intents,command_prefix="cdc!",test_guilds=[1268365327058599968])
+bot = commands.Bot(intents=intents,command_prefix="cdc!",test_guilds=[1373082837422444668])
 
 COLONTHREE_MODE = False
 COLONTHREE_CHANNEL = 0
@@ -39,10 +40,20 @@ SPAM_REDUCTION = []
 
 BEANED_LIST = []
 
+GAMBLING_PPL = []
+
 def dump_marriages():
     f = open("marriages.json","w")
     c = json.dumps({
         "marriages":MARRIAGES
+        },indent=4)
+    f.write(c)
+    f.close()
+
+def dump_wallets():
+    f = open("wallets.json","w")
+    c = json.dumps({
+        "wallets":WALLETS
         },indent=4)
     f.write(c)
     f.close()
@@ -85,6 +96,8 @@ def load_wallets():
 
 MARRIAGES = load_marriages()
 WALLETS = load_wallets()
+
+CURRENCY = "cdc€"
 
 
 WAITING_FOR_REACTION = []
@@ -334,8 +347,8 @@ async def manual_c3_trigger(i):
     global COLONTHREE_MODE
     global COLONTHREE_STARTER
     global COLONTHREE_CHANNEL
-    if i.author.id != 708750647847157880:
-        await i.send("you can't use this, sorry :3",ephemeral=True)
+    if spend(i.author.name,1000) == False:
+        await i.send(f"you don't have enough money, this command costs 1000{CURRENCY} to use",ephemeral=True)
         return
     msg = await i.channel.send("a wild :3 appeared! the next 5 messages must be :3 (you can't send two messages in a row, that's cheating)")
     COLONTHREE_MODE = True
@@ -452,16 +465,84 @@ async def on_message(m: disnake.Message):
                     except:
                         print(f"couldnt react to {m.author}, probably blocked")
 
-@bot.slash_command()
-async def gamble(i):
-    increase1 = random.randint(-300,500)
-    increase2 = random.randint(0,100)
-    if WALLETS.index(i.author.id) != -1:
-        WALLETS[i.author.id] += increase1
-        await i.send(f"you spun the wheel.... your balance has {'increased' if increase1 > 0 else 'decreased'} by {increase1}\nyou now have {WALLETS[i.author.id]}")
-    else:
-        WALLETS[i.author.id] = random.randint(0,100)
-        await i.send(f"you spun the wheel.... your balance has increased by {increase2}\nyou now have {WALLETS[i.author.id]}")
+def spend(id,money):
+    if id in WALLETS:
+        if WALLETS[id] > money:
+            WALLETS[id] -= money
+            return True
+        else:
+            return False
+    return False
 
-exit()
+@bot.slash_command()
+async def currency(i):
+    pass
+
+@currency.sub_command()
+async def sell(i,u:disnake.Member=None):
+    additional_worth = 0
+    if u.name in WALLETS:
+        additional_worth += WALLETS[u.name]
+    if i.author.name in WALLETS:
+        WALLETS[i.author.name] += 1000 + additional_worth
+    else:
+        WALLETS[i.author.name] = 1000 + additional_worth
+    await i.send(f"You sold {u.mention}")
+
+@currency.sub_command()
+async def balance(i,u:disnake.Member=None):
+    user = i.author
+    if u != None:
+        user = u
+    balance = WALLETS[user.name] if user.name in WALLETS else 0
+    await i.send(f"{"You have" if user == i.author else f"{user.mention} has"} {balance}{CURRENCY}")
+
+@currency.sub_command()
+async def leaderboard(i):
+    hi = sorted(WALLETS.items(), key=lambda item: item[1])
+    hi.reverse()
+    sortedlist = dict(hi)
+    output = "# leaderboard"
+    i_ = 1
+    for entry in sortedlist:
+        output = output + "\n" + str(i_) + ". **" + entry + "** - " + str(sortedlist[entry])
+        i_ += 1
+    
+    await i.send(output)
+
+@currency.sub_command()
+async def give_debt(i,u:disnake.Member):
+    if i.author.name in WALLETS:
+        if WALLETS[i.author.name] > 0:
+            WALLETS[i.author.name] *= -2
+            await i.send("NO cheating")
+            return
+        if random.randint(0,10) == 5:
+            WALLETS[u.name] = WALLETS[i.author.name]
+            await i.send(f"You gave {u.mention} all your debt, what a poor soul..")
+            WALLETS[i.author.name] = 0
+        else:
+            WALLETS[i.author.name] *= 2
+            await i.send(f"Your debt was doubled, you ROBBER.")
+        
+
+@currency.sub_command()
+async def gamble(i):
+    if i.author.id in GAMBLING_PPL:
+        await i.send("you can't gamble multiple times")
+        return
+    GAMBLING_PPL.append(i.author.id)
+    await i.send("*spinning....*")
+    time.sleep(2)
+    increase1 = random.randint(-1000,500)
+    increase2 = random.randint(0,100)
+    if i.author.name in WALLETS:
+        WALLETS[i.author.name] += increase1
+        await i.edit_original_message(f"{':chart_with_upwards_trend:' if increase1 > 0 else ':chart_with_downwards_trend:'} you spun the wheel.... your balance has {'increased' if increase1 > 0 else 'decreased'} by {abs(increase1)}\nyou now have {WALLETS[i.author.name]}{CURRENCY}")
+    else:
+        WALLETS[i.author.name] = increase2
+        await i.edit_original_message(f":chart_with_upwards_trend: you spun the wheel.... your balance has increased by {increase2}\nyou now have {WALLETS[i.author.name]}{CURRENCY}")
+    dump_wallets()
+    GAMBLING_PPL.remove(i.author.id)
+
 bot.run(os.environ["CDC_TOKEN"])
