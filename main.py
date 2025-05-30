@@ -73,28 +73,8 @@ def load_marriages():
     f.close()
     return r
 
-def load_wallets():
-    f = None
-    r = []
-    try:
-        f = open("wallets.json")
-    except:
-        print("no wallets file")
-        return {}
-    c = f.read()
-    try:
-        data = json.loads(c)
-        r = data["wallets"]
-    except:
-        print("invalid wallets file")
-    f.close()
-    return r
-
 
 MARRIAGES = load_marriages()
-WALLETS = load_wallets()
-
-CURRENCY = "€cdc"
 
 # funny game
 
@@ -500,104 +480,5 @@ def spend(id,money):
 @bot.slash_command()
 async def currency(i):
     pass
-
-@currency.sub_command()
-async def balance(i,u:disnake.Member=None):
-    user = i.author
-    if u != None:
-        user = u
-    balance = WALLETS[user.name] if user.name in WALLETS else 0
-    await i.send(f"{'You have' if user == i.author else f'{user.mention} has'} {balance}{CURRENCY}")
-
-@currency.sub_command()
-async def leaderboard(i):
-    hi = sorted(WALLETS.items(), key=lambda item: item[1])
-    hi.reverse()
-    sortedlist = dict(hi)
-    output = "# Gambling Leaderboard"
-    i_ = 1
-    for entry in sortedlist:
-        
-            
-        output = output + "\n" + f"{'-# ' if sortedlist[entry]<0 else '' }"+ str(i_) + ". **" + entry + "**: " + str(sortedlist[entry]) + CURRENCY
-        i_ += 1
-    
-    await i.send(output)
-
-@currency.sub_command()
-async def give_debt(i,u:disnake.Member):
-    if i.author == u:
-        await i.send("nuh uh")
-        return
-    if i.author.name in WALLETS:
-        if WALLETS[i.author.name] > 0:
-            WALLETS[i.author.name] *= -2
-            await i.send("NO cheating")
-            return
-        if random.randint(0,10) == 5:
-            WALLETS[u.name] = WALLETS[i.author.name]
-            await i.send(f"You gave {u.mention} all your debt, what a poor soul..")
-            WALLETS[i.author.name] = 0
-        else:
-            WALLETS[i.author.name] *= 2
-            await i.send(f"Your debt was doubled, you ROBBER.")
-
-@currency.sub_command()
-async def rob(i,u:disnake.Member):
-    if i.author == u:
-        await i.send("nuh uh")
-        return
-    if i.author.name in WALLETS and u.name in WALLETS:
-        if WALLETS[u.name] < 0:
-            await i.send("You can't steal from someone who's in debt, you POS")
-            return
-        increase = random.randint(0,WALLETS[u.name])
-        WALLETS[i.author.name] += increase
-        WALLETS[u.name] -= increase
-        await i.send(f"You stole {increase}{CURRENCY} from {u.mention}, how DARE you?")
-
-    
-
-
-@currency.sub_command()
-async def take_debt(i,u:disnake.Member):
-    if i.author == u:
-        await i.send("nuh uh")
-        return
-    if not i.author.name in WALLETS:
-        await i.send("You don't have a wallet")
-        return
-    if u.name in WALLETS:
-        if WALLETS[u.name] > 0:
-            await i.send("They actually don't have any debt.")
-            return
-        else:
-            await i.send(f"You took all of {u.mention}'s debt, you're so kind..")
-            WALLETS[i.author.name] = WALLETS[u.name]
-            WALLETS[u.name] = 0
-        
-
-@currency.sub_command()
-async def gamble(i):
-    if i.author.id in GAMBLING_PPL:
-        await i.send("you can't gamble multiple times")
-        return
-    GAMBLING_PPL.append(i.author.id)
-    await i.send("*spinning....*")
-    time.sleep(2)
-    neg = -200
-    if i.author.name in WALLETS:
-        if WALLETS[i.author.name] > 0:
-            neg = -WALLETS[i.author.name]*2
-    increase1 = random.randint(neg,-neg*2)
-    increase2 = random.randint(0,100)
-    if i.author.name in WALLETS:
-        WALLETS[i.author.name] += increase1
-        await i.edit_original_message(f"{':chart_with_upwards_trend:' if increase1 > 0 else ':chart_with_downwards_trend:'} you spun the wheel.... your balance has {'increased' if increase1 > 0 else 'decreased'} by {abs(increase1)}\nyou now have {WALLETS[i.author.name]}{CURRENCY}")
-    else:
-        WALLETS[i.author.name] = increase2
-        await i.edit_original_message(f":chart_with_upwards_trend: you spun the wheel.... your balance has increased by {increase2}\nyou now have {WALLETS[i.author.name]}{CURRENCY}")
-    dump_wallets()
-    GAMBLING_PPL.remove(i.author.id)
 
 bot.run(os.environ["CDC_TOKEN"])
