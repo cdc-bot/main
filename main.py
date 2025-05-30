@@ -481,6 +481,8 @@ async def currency(i):
 
 @currency.sub_command()
 async def sell(i,u:disnake.Member=None):
+    await i.send("no selling for now, selling people has been abolished on 30/05/2025 02:58 AM")
+    return
     if i.author == u:
         await i.send("nuh uh")
         return
