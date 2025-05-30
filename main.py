@@ -152,7 +152,7 @@ async def update_wordgames(message:disnake.Message):
                 if game.messages[len(game.messages)-1].author.id == message.author.id:
                     await message.delete()
                     continue
-            if message.content.lower() != game.word:
+            if message.content.lower() != game.word.lower() or message.author.bot:
                 await message.delete()
                 continue
             game.messages.append(message)
