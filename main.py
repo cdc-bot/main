@@ -814,11 +814,19 @@ async def inventory(i:disnake.ApplicationCommandInteraction):
     global CURRENCY_MANAGER
     global ITEM_MANAGER
     user = CURRENCY_MANAGER.get_user(i.author.id)
-    ret = "# Your Inventory"
+    ret = "Your items:"
+    ret_initial = ret
+    footer = "You can use /currency use_item on some of these!"
     for it in user.inventory:
         item = ITEM_MANAGER.get_item(it)
         ret = ret + "\n" + "- " + f"**{item.display_name}** ({item.name})"
-    await i.send(ret)
+    if ret == ret_initial:
+        ret = "You have no items."
+        footer = None
+    embed = disnake.Embed(title="Inventory",description=ret,color=disnake.Color.gold())
+    if footer != None:
+        embed.set_footer(text=footer)
+    await i.send(embed=embed)
 
 @currency.sub_command()
 async def shop(i:disnake.ApplicationCommandInteraction):
@@ -827,11 +835,13 @@ async def shop(i:disnake.ApplicationCommandInteraction):
     global CURRENCY_MANAGER
     global ITEM_MANAGER
     items = CURRENCY_SHOP.items
-    ret = "# Shop"
+    ret = "Available items:"
     for it in items:
         item = ITEM_MANAGER.get_item(it.name)
         ret = ret + "\n" + "- " + f"**{item.display_name}** ({item.name}) - {CURRENCY_MANAGER.format_price(it.price)}"
-    await i.send(ret)
+    embed = disnake.Embed(title="Shop",description=ret,color=disnake.Color.purple())
+    embed.set_footer(text="Use /currency buy to buy an item from here!")
+    await i.send(embed=embed)
 
 async def job_autocomplete(i:disnake.ApplicationCommandInteraction,curr:str):
     global JOB_MANAGER
@@ -858,15 +868,18 @@ async def job_apply(i:disnake.ApplicationCommandInteraction,job=commands.Param(a
         if item not in user.inventory:
             to_have.append(item)
     if len(to_have) > 0:
-        str = "# Rejected\nYou're missing the following items required for this job:"
+        str = "You're missing the following items required for this job:"
         for item in to_have:
             data = ITEM_MANAGER.get_item(item)
             str = str + "\n" + "- " + f"**{data.display_name}** ({data.name})"
-        str = str + "\n" + "-# Please buy them and run this command again if you'd like to reapply."
-        await i.send(str)
+        embed = disnake.Embed(title="Rejected",description=str,color=disnake.Color.red())
+        embed.set_footer(text="Please buy them and run this command again if you'd like to reapply.")
+        await i.send(embed=embed)
         return
     user.job = job.name
-    await i.send(f"# Accepted\nYou've been accepted for the **{job.display_name}** ({job.name}) job!\n-# Use /currency work to work.")
+    embed = disnake.Embed(title="Accepted",description=f"You've been accepted for the **{job.display_name}** ({job.name}) job!",color=disnake.Color.green())
+    embed.set_footer(text="Use /currency work to work.")
+    await i.send(embed=embed)
     
 @currency.sub_command()
 async def leaderboard(i:disnake.ApplicationCommandInteraction,debt:bool=False):
