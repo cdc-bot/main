@@ -481,6 +481,8 @@ class CurrencyUser:
         self.inventory = []
         self.job = "basic"
         self.last_worked = 0
+    def has_item(self,item):
+        return item in self.inventory 
     def add_item(self,item):
         global CURRENCY_MANAGER
         self.inventory.append(item)
@@ -624,6 +626,8 @@ class CurrencyShop:
 
 def on_computer(user):
     return ["It bluescreened and rebooted, I guess you're too clumsy.",False]
+def on_debt_shield(user):
+    return ["Well, it's already applied.",False]
 def on_debt_protector(user):
     if user.money >= 0:
         return ["But you weren't in debt.",False]
@@ -635,6 +639,7 @@ CURRENCY_SHOP = CurrencyShop()
 CURRENCY_SHOP.add_item("computer",150)
 CURRENCY_SHOP.add_item("msvs",35)
 CURRENCY_SHOP.add_item("debt_protector",100)
+CURRENCY_SHOP.add_item("debt_shield",1000)
 JOB_MANAGER = CurrencyJobManager()
 JOB_MANAGER.add_job("basic","Basic",12)
 JOB_MANAGER.add_job("programmer","Software Engineer",120).add_required_item("computer").add_required_item("msvs")
@@ -644,6 +649,7 @@ ITEM_MANAGER.add_item("poop_stain","Poop Stain",False)
 ITEM_MANAGER.add_item("computer","Computer",True).set_usage_callback(on_computer)
 ITEM_MANAGER.add_item("msvs","Microsoft Visual Studio",False)
 ITEM_MANAGER.add_item("debt_protector","Debt Protector",True).set_usage_callback(on_debt_protector)
+ITEM_MANAGER.add_item("debt_shield","Debt Shield",True).set_usage_callback(on_debt_shield)
 
 @currency.sub_command()
 async def gamble(i: disnake.ApplicationCommandInteraction):
@@ -651,7 +657,8 @@ async def gamble(i: disnake.ApplicationCommandInteraction):
     global CURRENCY_MANAGER
     await i.send("*Spinning the wheel...*")
     time.sleep(0.5)
-    money = CURRENCY_MANAGER.get_user(i.author.id).money
+    user = CURRENCY_MANAGER.get_user(i.author.id)
+    money = user.money
     min_boundary = -money
     max_boundary = money*2
     ultra_debt = False
@@ -660,7 +667,7 @@ async def gamble(i: disnake.ApplicationCommandInteraction):
     if min_boundary == 0 and max_boundary == 0:
         max_boundary = 2000
     gamble = random.randint(min_boundary,max_boundary)
-    if random.randint(1,10) == 5:
+    if random.randint(1,5) == 2 and not user.has_item("debt_shield"):
         gamble = min_boundary*9
         ultra_debt = True
     str = CURRENCY_MANAGER.update_ballance(i.author.id,gamble)
