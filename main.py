@@ -828,7 +828,30 @@ async def job_autocomplete(i:disnake.ApplicationCommandInteraction,curr:str):
 @currency.sub_command()
 async def job_apply(i:disnake.ApplicationCommandInteraction,job=commands.Param(autocomplete=job_autocomplete)):
     """Apply for a job"""
-    await i.send("wip")
+    global JOB_MANAGER
+    global ITEM_MANAGER
+    global CURRENCY_MANAGER
+    p = job.split(" - ")
+    job = JOB_MANAGER.get_job(p[0])
+    if job == None:
+        await i.send("bad job")
+        return
+    user = CURRENCY_MANAGER.get_user(i.author.id)
+    to_have = []
+    for item in job.required_items:
+        if item not in user.inventory:
+            to_have.append(item)
+    if len(to_have) > 0:
+        str = "# Rejected\nYou're missing the following items required for this job:"
+        for item in to_have:
+            data = ITEM_MANAGER.get_item(item)
+            str = str + "\n" + "- " + f"**{data.display_name}** ({data.name})"
+        str = str + "\n" + "-# Please buy them and run this command again if you'd like to reapply."
+        await i.send(str)
+        return
+    user.job = job.name
+    await i.send(f"# Accepted\nYou've been accepted for the **{job.display_name}** ({job.name}) job!\n-# Use /currency work to work.")
+    
 
     
 
