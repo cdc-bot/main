@@ -9,10 +9,6 @@ intents = disnake.Intents.all()
 # oops - ,test_guilds=[1373082837422444668]
 bot = commands.Bot(command_prefix="cdc!",intents=intents)
 
-COLONTHREE_MODE = False
-COLONTHREE_CHANNEL = 0
-COLONTHREE_STARTER = 0
-
 CUSTOM_STATUSES = [
     "cdcing all over the place",
     "hi im cdc",
@@ -99,6 +95,72 @@ MARRIAGES = load_marriages()
 WALLETS = load_wallets()
 
 CURRENCY = "€cdc"
+
+# funny game
+
+WORDGAME_INSTANCES = []
+
+class Wordgame:
+    channel = 0
+    messages = []
+    word = ""
+    times = random.randint(2,10)
+    starter = -1
+
+async def trigger_wordgame(channel_id:int,word=None):
+    if wordgame_exists(channel_id):
+        return
+    global WORDGAME_INSTANCES
+    words = ["balls"]
+    if word != None:
+        words = [word]
+    game = Wordgame()
+    game.channel = channel_id
+    game.word = random.choice(words)
+
+    # send starter
+    channel = bot.get_channel(channel_id)
+    msg = await channel.send(f"a wild {game.word} has appeared! the next {game.times} messages must be {game.word}.")
+    game.starter = msg.id
+    WORDGAME_INSTANCES.append(game)
+
+def wordgame_exists(channel_id:int):
+    global WORDGAME_INSTANCES
+    for game in WORDGAME_INSTANCES:
+        if game.channel == channel_id:
+            return True
+    return False
+
+async def stop_wordgame(channel_id:int):
+    global WORDGAME_INSTANCES
+    for game in WORDGAME_INSTANCES:
+        if game.channel == channel_id:
+            # send ender
+            channel = bot.get_channel(channel_id)
+            WORDGAME_INSTANCES.remove(game)
+            await channel.send(f"good job! you're all very {game.word}, the {game.word} left.")
+            break
+
+async def update_wordgames(message:disnake.Message):
+    global WORDGAME_INSTANCES
+    for game in WORDGAME_INSTANCES:
+        if game.channel == message.channel.id:
+            if message.id <= game.starter:
+                continue
+            if len(game.messages) != 0:
+                if game.messages[len(game.messages)-1].author.id == message.author.id:
+                    await message.delete()
+                    continue
+            if message.content.lower() != game.word:
+                await message.delete()
+                continue
+            game.messages.append(message)
+            if len(game.messages) >= game.times:
+                await stop_wordgame(game.channel)
+                continue
+
+            
+
 
 
 WAITING_FOR_REACTION = []
@@ -344,49 +406,12 @@ def get_mentioned_ids(content):
     return ids
 
 @bot.slash_command()
-async def manual_c3_trigger(i):
-    global COLONTHREE_MODE
-    global COLONTHREE_STARTER
-    global COLONTHREE_CHANNEL
-    if i.author.id != 708750647847157880:
-        await i.send(f"you can't use this",ephemeral=True)
-        return
-    msg = await i.channel.send("a wild :3 appeared! the next 5 messages must be :3 (you can't send two messages in a row, that's cheating)")
-    COLONTHREE_MODE = True
-    COLONTHREE_STARTER = msg.id
-    COLONTHREE_CHANNEL = i.channel.id
-    await i.send("triggered",ephemeral=True)
+async def manual_wordgame_trigger(i,word=None):
+    await trigger_wordgame(i.channel.id,word)
 
 @bot.event
 async def on_message(m: disnake.Message):
-    global COLONTHREE_MODE
-    global COLONTHREE_STARTER
-    global COLONTHREE_CHANNEL
-    if random.randint(0,1000) == 425 and COLONTHREE_MODE == False:
-        msg = await m.channel.send("a wild :3 appeared! the next 5 messages must be :3 (you can't send two messages in a row, that's cheating)")
-        COLONTHREE_MODE = True
-        COLONTHREE_STARTER = msg.id
-        COLONTHREE_CHANNEL = m.channel.id
-
-    if COLONTHREE_MODE == True and m.channel.id == COLONTHREE_CHANNEL:
-        c3followed = 0
-        c3prev = 0
-        async for message in m.channel.history(limit=5):
-            if m.channel.id != COLONTHREE_CHANNEL or message.id < COLONTHREE_STARTER:
-                continue
-            if message.author == bot.user:
-                continue
-            if message.content == ":3" and message.author.id != c3prev:
-                c3prev = message.author.id
-                c3followed += 1
-            else:
-                print(message.content)
-                c3followed -= 1
-                await message.delete()
-                break
-        if c3followed == 5:
-            COLONTHREE_MODE = False
-            await m.channel.send("good job! you're all very :3, the :3 left.. for now....")
+    await update_wordgames(m)
     if is_married(m.author.id):
         # cheating checks
         is_mention_cheating = False
