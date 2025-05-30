@@ -883,10 +883,10 @@ async def leaderboard(i:disnake.ApplicationCommandInteraction,debt:bool=False):
     for place in leaderboard:
         if shown <= lb_limit:
             embed.add_field(f"{placement}.",f"<@{place.id}>: `{CURRENCY_MANAGER.format_price(place.money)}`",inline=False)
-        placement += placement_mod
-        shown += 1
         if place.id == str(i.author.id):
             my_placement = placement
+        placement += placement_mod
+        shown += 1
     embed.set_footer(text=f"Your placement is #{my_placement} "+f"{f'| Balance {CURRENCY_MANAGER.format_price(CURRENCY_MANAGER.get_user(i.author.id).money)}' if my_placement > lb_limit else ''}")
     await i.send(embed=embed)
     
