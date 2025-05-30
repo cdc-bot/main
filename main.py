@@ -751,8 +751,24 @@ async def item_autocomp(i:disnake.Interaction,current:str):
         ret.append(f"{item_data.name} - {item_data.display_name}")
     return ret[:10]
 
+async def item_autocomp_usable(i:disnake.Interaction,current:str):
+    global ITEM_MANAGER
+    global CURRENCY_MANAGER
+    user = CURRENCY_MANAGER.get_user(i.author.id)
+    mc = []
+    for item in user.inventory:
+        if item.find(current) != -1 or current == "":
+            mc.append(item)
+    ret = []
+    for item in mc:
+        item_data = ITEM_MANAGER.get_item(item)
+        if not item_data.usable:
+            continue
+        ret.append(f"{item_data.name} - {item_data.display_name}")
+    return ret[:10]
+
 @currency.sub_command()
-async def use_item(i:disnake.ApplicationCommandInteraction,item=commands.Param(autocomplete=item_autocomp)):
+async def use_item(i:disnake.ApplicationCommandInteraction,item=commands.Param(autocomplete=item_autocomp_usable)):
     """Use an item."""
     d = item.split(" - ")
     global ITEM_MANAGER
