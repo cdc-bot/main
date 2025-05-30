@@ -8,7 +8,7 @@ import datetime
 
 intents = disnake.Intents.all()
 # oops - ,test_guilds=[1373082837422444668]
-bot = commands.Bot(command_prefix="cdc!",intents=intents,test_guilds=[1373082837422444668])
+bot = commands.Bot(command_prefix="cdc!",intents=intents)
 
 CUSTOM_STATUSES = [
     "cdcing all over the place",
