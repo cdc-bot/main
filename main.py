@@ -505,7 +505,7 @@ async def leaderboard(i):
     hi = sorted(WALLETS.items(), key=lambda item: item[1])
     hi.reverse()
     sortedlist = dict(hi)
-    output = "# leaderboard"
+    output = "# Gambling Leaderboard"
     i_ = 1
     for entry in sortedlist:
         
