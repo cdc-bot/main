@@ -138,6 +138,7 @@ async def stop_wordgame(channel_id:int):
             # send ender
             channel = bot.get_channel(channel_id)
             WORDGAME_INSTANCES.remove(game)
+            game.messages = []
             await channel.send(f"good job! you're all very {game.word}, the {game.word} left.")
             break
 
