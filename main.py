@@ -868,7 +868,27 @@ async def job_apply(i:disnake.ApplicationCommandInteraction,job=commands.Param(a
     user.job = job.name
     await i.send(f"# Accepted\nYou've been accepted for the **{job.display_name}** ({job.name}) job!\n-# Use /currency work to work.")
     
-
+@currency.sub_command()
+async def leaderboard(i:disnake.ApplicationCommandInteraction,debt:bool=False):
+    global CURRENCY_MANAGER
+    embed = disnake.Embed(title=f"{'Currency' if not debt else 'Debt'} Leaderboard",colour=disnake.Color.blurple())
+    leaderboard = sorted(CURRENCY_MANAGER.data,key=lambda k: k.money)
+    if not debt:
+        leaderboard.reverse()
+    placement = 1
+    placement_mod = 1
+    my_placement = placement
+    lb_limit = 10
+    shown = 1
+    for place in leaderboard:
+        if shown <= lb_limit:
+            embed.add_field(f"{placement}.",f"<@{place.id}>: `{CURRENCY_MANAGER.format_price(place.money)}`",inline=False)
+        placement += placement_mod
+        shown += 1
+        if place.id == str(i.author.id):
+            my_placement = placement
+    embed.set_footer(text=f"Your placement is #{my_placement} "+f"{f'| Balance {CURRENCY_MANAGER.format_price(CURRENCY_MANAGER.get_user(i.author.id).money)}' if my_placement > lb_limit else ''}")
+    await i.send(embed=embed)
     
 
 bot.run(os.environ["CDC_TOKEN"])
