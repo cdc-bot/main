@@ -840,7 +840,8 @@ async def shop(i:disnake.ApplicationCommandInteraction):
         item = ITEM_MANAGER.get_item(it.name)
         ret = ret + "\n" + "- " + f"**{item.display_name}** ({item.name}) - {CURRENCY_MANAGER.format_price(it.price)}"
     embed = disnake.Embed(title="Shop",description=ret,color=disnake.Color.purple())
-    embed.set_footer(text="Use /currency buy to buy an item from here!")
+    balance = CURRENCY_MANAGER.format_price(CURRENCY_MANAGER.get_user(i.author.id).money)
+    embed.set_footer(text=f"Your balance: {balance} | Use /currency buy to buy an item from here!")
     await i.send(embed=embed)
 
 async def job_autocomplete(i:disnake.ApplicationCommandInteraction,curr:str):
