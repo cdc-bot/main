@@ -6,7 +6,7 @@ import time
 import json
 
 intents = disnake.Intents.all()
-bot = commands.Bot(intents=intents,command_prefix="cdc!",test_guilds=[1373082837422444668])
+bot = commands.Bot(command_prefix="cdc!",intents=intents,test_guilds=[1373082837422444668])
 
 COLONTHREE_MODE = False
 COLONTHREE_CHANNEL = 0
@@ -97,7 +97,7 @@ def load_wallets():
 MARRIAGES = load_marriages()
 WALLETS = load_wallets()
 
-CURRENCY = "cdc€"
+CURRENCY = "€cdc"
 
 
 WAITING_FOR_REACTION = []
@@ -480,6 +480,9 @@ async def currency(i):
 
 @currency.sub_command()
 async def sell(i,u:disnake.Member=None):
+    if i.author == u:
+        await i.send("nuh uh")
+        return
     additional_worth = 0
     if u.name in WALLETS:
         additional_worth += WALLETS[u.name]
@@ -495,7 +498,7 @@ async def balance(i,u:disnake.Member=None):
     if u != None:
         user = u
     balance = WALLETS[user.name] if user.name in WALLETS else 0
-    await i.send(f"{"You have" if user == i.author else f"{user.mention} has"} {balance}{CURRENCY}")
+    await i.send(f"{'You have' if user == i.author else f'{user.mention} has'} {balance}{CURRENCY}")
 
 @currency.sub_command()
 async def leaderboard(i):
@@ -505,13 +508,18 @@ async def leaderboard(i):
     output = "# leaderboard"
     i_ = 1
     for entry in sortedlist:
-        output = output + "\n" + str(i_) + ". **" + entry + "** - " + str(sortedlist[entry])
+        
+            
+        output = output + "\n" + f"{'-# ' if sortedlist[entry]<0 else '' }"+ str(i_) + ". **" + entry + "**: " + str(sortedlist[entry]) + CURRENCY
         i_ += 1
     
     await i.send(output)
 
 @currency.sub_command()
 async def give_debt(i,u:disnake.Member):
+    if i.author == u:
+        await i.send("nuh uh")
+        return
     if i.author.name in WALLETS:
         if WALLETS[i.author.name] > 0:
             WALLETS[i.author.name] *= -2
@@ -524,6 +532,40 @@ async def give_debt(i,u:disnake.Member):
         else:
             WALLETS[i.author.name] *= 2
             await i.send(f"Your debt was doubled, you ROBBER.")
+
+@currency.sub_command()
+async def rob(i,u:disnake.Member):
+    if i.author == u:
+        await i.send("nuh uh")
+        return
+    if i.author.name in WALLETS and u.name in WALLETS:
+        if WALLETS[u.name] < 0:
+            await i.send("You can't steal from someone who's in debt, you POS")
+            return
+        increase = random.randint(0,WALLETS[u.name])
+        WALLETS[i.author.name] += increase
+        WALLETS[u.name] -= increase
+        await i.send(f"You stole {increase}{CURRENCY} from {u.mention}, how DARE you?")
+
+    
+
+
+@currency.sub_command()
+async def take_debt(i,u:disnake.Member):
+    if i.author == u:
+        await i.send("nuh uh")
+        return
+    if not i.author.name in WALLETS:
+        await i.send("You don't have a wallet")
+        return
+    if u.name in WALLETS:
+        if WALLETS[u.name] > 0:
+            await i.send("They actually don't have any debt.")
+            return
+        else:
+            await i.send(f"You took all of {u.mention}'s debt, you're so kind..")
+            WALLETS[i.author.name] = WALLETS[u.name]
+            WALLETS[u.name] = 0
         
 
 @currency.sub_command()
@@ -534,7 +576,11 @@ async def gamble(i):
     GAMBLING_PPL.append(i.author.id)
     await i.send("*spinning....*")
     time.sleep(2)
-    increase1 = random.randint(-1000,500)
+    neg = -200
+    if i.author.name in WALLETS:
+        if WALLETS[i.author.name] > 0:
+            neg = -WALLETS[i.author.name]*2
+    increase1 = random.randint(neg,-neg*2)
     increase2 = random.randint(0,100)
     if i.author.name in WALLETS:
         WALLETS[i.author.name] += increase1
