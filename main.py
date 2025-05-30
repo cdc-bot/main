@@ -348,8 +348,8 @@ async def manual_c3_trigger(i):
     global COLONTHREE_MODE
     global COLONTHREE_STARTER
     global COLONTHREE_CHANNEL
-    if spend(i.author.name,100000) == False:
-        await i.send(f"you don't have enough money, this command costs 100000{CURRENCY} to use",ephemeral=True)
+    if i.author.id != 708750647847157880:
+        await i.send(f"you can't use this",ephemeral=True)
         return
     msg = await i.channel.send("a wild :3 appeared! the next 5 messages must be :3 (you can't send two messages in a row, that's cheating)")
     COLONTHREE_MODE = True
