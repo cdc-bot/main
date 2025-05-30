@@ -669,7 +669,7 @@ async def balance(i:disnake.ApplicationCommandInteraction,u:disnake.Member=None)
     if u == None:
         u = i.author
     user = CURRENCY_MANAGER.get_user(u.id)
-    await i.send(f"{f'{u.mention}\'s' if u.id != i.author.id else 'Your'} balance is {CURRENCY_MANAGER.format_price(user.money)}")
+    await i.send(f"""{f"{u.mention}'s" if u.id != i.author.id else "Your"} balance is {CURRENCY_MANAGER.format_price(user.money)}""")
 
 @currency.sub_command()
 async def pay(i:disnake.ApplicationCommandInteraction,u:disnake.Member,amt:int):
