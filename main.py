@@ -6,7 +6,8 @@ import time
 import json
 
 intents = disnake.Intents.all()
-bot = commands.Bot(command_prefix="cdc!",intents=intents,test_guilds=[1373082837422444668])
+# oops - ,test_guilds=[1373082837422444668]
+bot = commands.Bot(command_prefix="cdc!",intents=intents)
 
 COLONTHREE_MODE = False
 COLONTHREE_CHANNEL = 0
