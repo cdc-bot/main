@@ -101,11 +101,12 @@ CURRENCY = "€cdc"
 WORDGAME_INSTANCES = []
 
 class Wordgame:
-    channel = 0
-    messages = []
-    word = ""
-    times = random.randint(2,10)
-    starter = -1
+    def __init__(self):
+        self.channel = 0
+        self.messages = []
+        self.word = ""
+        self.times = random.randint(2,10)
+        self.starter = -1
 
 async def trigger_wordgame(channel_id:int,word=None):
     if wordgame_exists(channel_id):
@@ -138,7 +139,6 @@ async def stop_wordgame(channel_id:int):
             # send ender
             channel = bot.get_channel(channel_id)
             WORDGAME_INSTANCES.remove(game)
-            game.messages = []
             await channel.send(f"good job! you're all very {game.word}, the {game.word} left.")
             break
 
@@ -159,10 +159,6 @@ async def update_wordgames(message:disnake.Message):
             if len(game.messages) >= game.times:
                 await stop_wordgame(game.channel)
                 continue
-
-            
-
-
 
 WAITING_FOR_REACTION = []
 
