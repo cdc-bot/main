@@ -660,7 +660,7 @@ async def gamble(i: disnake.ApplicationCommandInteraction):
         max_boundary = 2000
     gamble = random.randint(min_boundary,max_boundary)
     str = CURRENCY_MANAGER.update_ballance(i.author.id,gamble)
-    await i.edit_original_message(f"{':chart_with_upwards_trend: You got' if gamble > 0 else ':chart_with_downwards_trend: You lost'} {CURRENCY_MANAGER.format_price(gamble)}\n{str.as_codeblock()}")
+    await i.edit_original_message(f"{':chart_with_upwards_trend: You got' if gamble > 0 else ':chart_with_downwards_trend: You lost'} {CURRENCY_MANAGER.format_price(abs(gamble))}\n-# {str.as_codeblock()}")
 
 @currency.sub_command()
 async def balance(i:disnake.ApplicationCommandInteraction,u:disnake.Member=None):
