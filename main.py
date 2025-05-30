@@ -498,7 +498,7 @@ class CurrencyUser:
 class CurrencyManager:
     def __init__(self):
         self.data = []
-        self.currency = "cdc"
+        self.currency = "€cdc"
         self.try_load()
     
     def format_price(self,p):
@@ -884,6 +884,7 @@ async def job_apply(i:disnake.ApplicationCommandInteraction,job=commands.Param(a
     
 @currency.sub_command()
 async def leaderboard(i:disnake.ApplicationCommandInteraction,debt:bool=False):
+    """View the leaderboard."""
     global CURRENCY_MANAGER
     embed = disnake.Embed(title=f"{'Currency' if not debt else 'Debt'} Leaderboard",colour=disnake.Color.blurple())
     leaderboard = sorted(CURRENCY_MANAGER.data,key=lambda k: k.money)
