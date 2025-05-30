@@ -664,7 +664,7 @@ async def gamble(i: disnake.ApplicationCommandInteraction):
         gamble = min_boundary*9
         ultra_debt = True
     str = CURRENCY_MANAGER.update_ballance(i.author.id,gamble)
-    await i.edit_original_message(f"{':chart_with_upwards_trend: You got' if gamble > 0 else ':chart_with_downwards_trend: You lost'} {CURRENCY_MANAGER.format_price(abs(gamble))}\n-# {str.as_codeblock()} {'\n-# Woah! Stuck in debt while gambling? Use a **Debt Prodector**!' if ultra_debt else ''}")
+    await i.edit_original_message(f"{':chart_with_upwards_trend: You got' if gamble > 0 else ':chart_with_downwards_trend: You lost'} {CURRENCY_MANAGER.format_price(abs(gamble))}\n-# {str.as_codeblock()} {'\n-# Woah! Stuck in debt while gambling? Use a **Debt Prodector**!' if ultra_debt == True else ''}")
 
 @currency.sub_command()
 async def balance(i:disnake.ApplicationCommandInteraction,u:disnake.Member=None):
