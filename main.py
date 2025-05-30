@@ -480,22 +480,6 @@ async def currency(i):
     pass
 
 @currency.sub_command()
-async def sell(i,u:disnake.Member=None):
-    await i.send("no selling for now, selling people has been abolished on 30/05/2025 02:58 AM")
-    return
-    if i.author == u:
-        await i.send("nuh uh")
-        return
-    additional_worth = 0
-    if u.name in WALLETS:
-        additional_worth += WALLETS[u.name]
-    if i.author.name in WALLETS:
-        WALLETS[i.author.name] += 1000 + additional_worth
-    else:
-        WALLETS[i.author.name] = 1000 + additional_worth
-    await i.send(f"You sold {u.mention}")
-
-@currency.sub_command()
 async def balance(i,u:disnake.Member=None):
     user = i.author
     if u != None:
