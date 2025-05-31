@@ -645,6 +645,7 @@ JOB_MANAGER = CurrencyJobManager()
 JOB_MANAGER.add_job("basic","Basic",12)
 JOB_MANAGER.add_job("programmer","Software Engineer",120).add_required_item("computer").add_required_item("msvs")
 JOB_MANAGER.add_job("doctor","Hospital Surgeon",500).add_required_item("g_syringe")
+JOB_MANAGER.add_job("politician","Politician",500).add_required_item("lie").add_required_item("lie").add_required_item("lie").add_required_item("lie").add_required_item("lie").add_required_item("lie")
 JOB_MANAGER.hour_is(5)
 ITEM_MANAGER = CurrencyItemManager()
 ITEM_MANAGER.add_item("poop_stain","Poop Stain",False)
@@ -653,6 +654,7 @@ ITEM_MANAGER.add_item("msvs","Microsoft Visual Studio",False)
 ITEM_MANAGER.add_item("debt_protector","Debt Protector",True).set_usage_callback(on_debt_protector)
 ITEM_MANAGER.add_item("debt_shield","Debt Shield",True).set_usage_callback(on_debt_shield)
 ITEM_MANAGER.add_item("g_syringe","Golden Syringe",True)
+ITEM_MANAGER.add_item("lie","Lie",True)
 
 @currency.sub_command()
 async def gamble(i: disnake.ApplicationCommandInteraction):
@@ -879,9 +881,12 @@ async def job_apply(i:disnake.ApplicationCommandInteraction,job=commands.Param(a
         return
     user = CURRENCY_MANAGER.get_user(i.author.id)
     to_have = []
+    inv = user.inventory.copy()
     for item in job.required_items:
-        if item not in user.inventory:
+        if item not in inv:
             to_have.append(item)
+        else:
+            inv.remove(item)
     if len(to_have) > 0:
         str = "You're missing the following items required for this job:"
         for item in to_have:
@@ -918,6 +923,12 @@ async def leaderboard(i:disnake.ApplicationCommandInteraction,debt:bool=False):
         shown += 1
     embed.set_footer(text=f"Your placement is #{my_placement} "+f"{f'| Balance {CURRENCY_MANAGER.format_price(CURRENCY_MANAGER.get_user(i.author.id).money)}' if my_placement > lb_limit else ''}")
     await i.send(embed=embed)
+
+@currency.sub_command()
+async def lie(i:disnake.ApplicationCommandInteraction):
+    global CURRENCY_MANAGER
+    await i.send("You lied.")
+    CURRENCY_MANAGER.get_user(i.author.id).add_item("lie")
     
 
 bot.run(os.environ["CDC_TOKEN"])
