@@ -628,6 +628,11 @@ def on_computer(user):
     return ["It bluescreened and rebooted, I guess you're too clumsy.",False]
 def on_debt_shield(user):
     return ["Well, it's already applied.",False]
+def on_syringe(user):
+    return ["You injected yourself with it.. But, nothing happened. Ow...",False]
+def on_lie(user):
+    user.add_item("lie")
+    return ["You lied again.",False]
 def on_debt_protector(user):
     if user.money >= 0:
         return ["But you weren't in debt.",False]
@@ -653,8 +658,8 @@ ITEM_MANAGER.add_item("computer","Computer",True).set_usage_callback(on_computer
 ITEM_MANAGER.add_item("msvs","Microsoft Visual Studio",False)
 ITEM_MANAGER.add_item("debt_protector","Debt Protector",True).set_usage_callback(on_debt_protector)
 ITEM_MANAGER.add_item("debt_shield","Debt Shield",True).set_usage_callback(on_debt_shield)
-ITEM_MANAGER.add_item("g_syringe","Golden Syringe",True)
-ITEM_MANAGER.add_item("lie","Lie",True)
+ITEM_MANAGER.add_item("g_syringe","Golden Syringe",True).set_usage_callback(on_syringe)
+ITEM_MANAGER.add_item("lie","Lie",True).set_usage_callback(on_lie)
 
 @currency.sub_command()
 async def gamble(i: disnake.ApplicationCommandInteraction):
