@@ -376,6 +376,7 @@ def get_mentioned_ids(content):
 
 @bot.slash_command()
 async def manual_wordgame_trigger(i,word=None):
+    await i.channel.send(f"{i.author.mention} has started a wordgame!")
     await trigger_wordgame(i.channel.id,word)
 
 @bot.event
