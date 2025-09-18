@@ -11,16 +11,9 @@ intents = disnake.Intents.all()
 bot = commands.Bot(command_prefix="cdc!",intents=intents)
 
 CUSTOM_STATUSES = [
-    "cdcing all over the place",
-    "hi im cdc",
-    "dm me to \"talk\"",
-    "no i don't understand what you're saying i'm programmed to reply with stuff",
-    "i am sentient......... OOOoooooooo",
-    "boo!",
-    "🐟",
-    "cdc-botting rn",
-    "geometry dash",
-    "yeah",
+    "meow",
+    ":3",
+    "j",
     "h"
 ]
 
