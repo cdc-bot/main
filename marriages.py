@@ -330,7 +330,7 @@ class Marriages(commands.Cog):
         """Request cheating statistics for the last 24h"""
         if not MARRIAGE_MANAGER.is_married(i.user.id):
             await i.response.send_message("you're not married",ephemeral=True)
-        send_cheating_stats(MARRIAGE_MANAGER.get_marriage(i.user.id),i.user.id)
+        await send_cheating_stats(MARRIAGE_MANAGER.get_marriage(i.user.id),i.user.id)
         await i.response.send_message("cheating stats sent")
     
     @marriages.command()
