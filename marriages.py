@@ -396,7 +396,6 @@ class Marriages(commands.Cog):
         for p in WAITING_FOR_REACTION:
             if p.message_id == reaction.message.id and not p.processing:
                 proposal = p
-                p.processing = True
                 break
         if proposal == None:
             # not a proposal message
@@ -416,6 +415,7 @@ class Marriages(commands.Cog):
 
         if by_recipient:
             if is_accept:
+                proposal.processing = True
                 poly = False
                 invited = MARRIAGE_MANAGER.is_married(proposal.proposer)
                 await proposal_message.edit(content="proposal accepted")
@@ -469,12 +469,14 @@ class Marriages(commands.Cog):
                 proposal.processing = False
                 return
         elif by_proposer and is_deny:
+            proposal.processing = True
             await proposal_message.edit(content="Proposal retracted")
             await proposal_message.clear_reactions()
             WAITING_FOR_REACTION.remove(proposal)
             proposal.processing = False
             return
         else:
+            proposal.processing = True
             await reaction.remove(user)
             proposal.processing = False
             return
