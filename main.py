@@ -7,7 +7,7 @@ import json
 import datetime
 import logging
 
-test = []
+test = None
 try:
     if (os.environ["CDC_DEBUG"] == "1"):
         test = [1373082837422444668]
