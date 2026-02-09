@@ -459,23 +459,25 @@ class Marriages(commands.Cog):
                         proposeruser = await bot.fetch_user(proposal.recipient)
                     await proposeruser.send(welcome_to_marriage)
                     await MARRIAGE_MANAGER.send_to_partners(proposeruser.id,f"# New member in marriage!\n <@{user.id}> has joined your marriage! {proposal_message.jump_url}")
-                    
+                proposal.processing = False
                 return
             if is_deny:
                 await proposal_message.reply(f"Sorry <@{proposal.proposer}>, your proposal was declined.")
                 await proposal_message.edit(content="Proposal declined")
                 await proposal_message.clear_reactions()
                 WAITING_FOR_REACTION.remove(proposal)
+                proposal.processing = False
                 return
         elif by_proposer and is_deny:
             await proposal_message.edit(content="Proposal retracted")
             await proposal_message.clear_reactions()
             WAITING_FOR_REACTION.remove(proposal)
+            proposal.processing = False
             return
         else:
             await reaction.remove(user)
+            proposal.processing = False
             return
-        proposal.processing = False
         
     @commands.Cog.listener()
     async def on_message(self,m: discord.Message):
