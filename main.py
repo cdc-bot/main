@@ -7,11 +7,15 @@ import json
 import datetime
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+test = []
+if (os.environ["CDC_DEBUG"] == "1"):
+    test = [1373082837422444668]
+    logging.basicConfig(level=logging.DEBUG)
 
 intents = disnake.Intents.all()
 # oops - 
-bot = commands.Bot(command_prefix="cdc!",intents=intents,test_guilds=[1373082837422444668])
+
+bot = commands.Bot(command_prefix="cdc!",intents=intents,test_guilds=test)
 
 CUSTOM_STATUSES = [
     "meow",
