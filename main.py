@@ -8,9 +8,12 @@ import datetime
 import logging
 
 test = []
-if (os.environ["CDC_DEBUG"] == "1"):
-    test = [1373082837422444668]
-    logging.basicConfig(level=logging.DEBUG)
+try:
+    if (os.environ["CDC_DEBUG"] == "1"):
+        test = [1373082837422444668]
+        logging.basicConfig(level=logging.DEBUG)
+except:
+    print("cdc-bot is normal")
 
 intents = disnake.Intents.all()
 # oops - 
