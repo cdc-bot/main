@@ -455,10 +455,12 @@ class Marriages(commands.Cog):
                     await MARRIAGE_MANAGER.send_to_partners(proposeruser.id,welcome_to_marriage)
                 else:
                     proposeruser = await bot.fetch_user(proposal.proposer)
+                    otheruser = proposal.proposer
                     if invited:
+                        otheruser = proposal.recipient
                         proposeruser = await bot.fetch_user(proposal.recipient)
                     await proposeruser.send(welcome_to_marriage)
-                    await MARRIAGE_MANAGER.send_to_partners(proposeruser.id,f"# New member in marriage!\n <@{user.id}> has joined your marriage! {proposal_message.jump_url}")
+                    await MARRIAGE_MANAGER.send_to_partners(proposeruser.id,f"# New member in marriage!\n <@{otheruser}> has joined your marriage! {proposal_message.jump_url}")
                 proposal.processing = False
                 return
             if is_deny:
@@ -532,7 +534,10 @@ async def send_out_deferred_cheating():
                     bad_relationship_score = 5
                 message_text = header+f"\n- Total cheating incidents: {total_cheats}\n- Bad relationship score: {bad_relationship_score}/5"
                 user = await bot.fetch_user(member)
-                await user.send(content=message_text,embed=embed)
+                try:
+                    await user.send(content=message_text,embed=embed)
+                except:
+                    await user.send(content=message_text+"\n-# (no one cheated)",embed=embed)
         marriage.flush_cheating()
                 
 
