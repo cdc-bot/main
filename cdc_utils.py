@@ -7,6 +7,15 @@ def filter_to_numbers(string:str):
         return ret
     else:
         return "0"
+def char_limit(string,chars):
+    show_last = 10
+    if len(string) > chars+show_last:
+        not_shown = len(string)-chars
+        not_shown_str = ""
+        if show_last > 0:
+            not_shown_str = f"...({not_shown-show_last} chars)..."
+        string = string[:chars]+not_shown_str+string[-show_last:]
+    return string
 class NumberAbbreviations:
     abbreviations = {}
     def add_abbreviation(self,symbol,power_of_ten):
@@ -14,13 +23,13 @@ class NumberAbbreviations:
     def abbrevate(self,n):
         absolute = abs(n)
         for abbreviation in self.abbreviations:
-            if absolute > self.abbreviations[abbreviation]: 
+            if absolute >= self.abbreviations[abbreviation]: 
                 number = 0
                 try:
                     number = round(n/self.abbreviations[abbreviation],2)
                 except:
                     number = round(int(n)//int(self.abbreviations[abbreviation]),2)
-                return f"{number}{abbreviation}"
+                return char_limit(f"{number}{abbreviation}",15)
         return n
     def unpack(self,n_str:str):
         for abbreviation in self.abbreviations:
@@ -46,3 +55,7 @@ number_abbreviation.add_abbreviation("B",9)
 number_abbreviation.add_abbreviation("M",6)
 number_abbreviation.add_abbreviation("K",3)
 #number_abbreviation.add_abbreviation("GPLEX",pow(10,100))
+
+while True:
+    testing = input("enter string: ")
+    print(char_limit(testing,15))
