@@ -510,7 +510,7 @@ async def send_out_deferred_cheating():
         for member in marriage.people:
             deferred = preferences.manager.get_user(member).defer_cheating_alerts.get()
             if deferred or len(marriage.people) > 2:
-                header = "# Cheating stats"
+                header = "# Cheating stats for the last 24h"
                 embed = discord.Embed(title=None)
                 bad_relationship_score = 0
                 total_cheats = 0
@@ -521,7 +521,7 @@ async def send_out_deferred_cheating():
                         plural = "s"
                         if value == 1:
                             plural = ""
-                        embed.add_field(inline=True,name="Cheater",value=f"> Person: <@{cheater}>\n> Cheated: {value} time{plural}")
+                        embed.add_field(inline=True,name="Cheater",value=f"> <@{cheater}>\n> Cheated: {value} time{plural}")
                 if total_cheats > 50:
                     bad_relationship_score = 1
                 if total_cheats > 100:
