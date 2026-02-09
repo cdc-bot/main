@@ -1,12 +1,12 @@
-import disnake
-from disnake.ext import commands,tasks
+import discord
+from discord.ext import commands, tasks
+from discord import app_commands
 import os
 import random
 import time
 import json
 import datetime
 import logging
-
 
 test = None
 try:
@@ -16,7 +16,7 @@ try:
 except:
     print("cdc-bot is normal")
 
-intents = disnake.Intents.all()
+intents = discord.Intents.all()
 # oops - 
 
 bot = commands.Bot(command_prefix="cdc!",intents=intents,test_guilds=test)
@@ -30,16 +30,17 @@ CUSTOM_STATUSES = [
 
 @tasks.loop(minutes=5)
 async def status_change():
-    activity = disnake.Activity(type=disnake.ActivityType.custom,name="custom",state=random.choice(CUSTOM_STATUSES))
-    await bot.change_presence(status=disnake.Status.online,activity=activity)
+    activity = discord.Activity(type=discord.ActivityType.custom,name="custom",state=random.choice(CUSTOM_STATUSES))
+    await bot.change_presence(status=discord.Status.online,activity=activity)
 
 @bot.event
 async def on_ready():
     print("ready")
-    bot.load_extension("preferences")
-    bot.load_extension("currency")
-    bot.load_extension("marriages")
-    bot.load_extension("wordgame")
+    await bot.load_extension("preferences")
+    await bot.load_extension("currency")
+    await bot.load_extension("marriages")
+    #bot.load_extension("wordgame")
+    #await bot.tree.sync()
     status_change.start()
         
 SPAM_REDUCTION = []
@@ -94,7 +95,7 @@ async def stop_wordgame(channel_id:int):
             await channel.send(f"good job! you're all very {game.word}, the {game.word} left.")
             break
 
-async def update_wordgames(message:disnake.Message):
+async def update_wordgames(message:discord.Message):
     global WORDGAME_INSTANCES
     for game in WORDGAME_INSTANCES:
         if game.channel == message.channel.id:
@@ -163,42 +164,58 @@ def should_reply(content,to_detect):
                 return True
     return False
 
-@bot.slash_command()
+@bot.tree.command()
+async def dev(i,cmd: str):
+    if i.user.id != 708750647847157880:
+        await i.response.send_message("not for you",ephemeral=True)
+        return
+    if cmd == "sync":
+        await i.response.send_message("ok!")
+        await bot.tree.sync()
+        return
+    if cmd == "kill":
+        await i.response.send_message("ok!")
+        exit()
+        return
+    await i.response.send_message("not a command")
+
+
+@bot.tree.command()
 async def opinion(i):
     """Tells you what the bot "thinks" you are."""
-    if i.author.id == 708750647847157880:
-        await i.send("oki",ephemeral=True)
-        exit()
-    random_responses = ["idk","ur a person","ur someone",f"ur {i.author}","ur cool","ur stupid","ur a programmer.. maybe",":baby:"]
-    await i.send(random.choice(random_responses))
+    random_responses = ["idk","ur a person","ur someone",f"ur {i.user}","ur cool","ur stupid","ur a programmer.. maybe",":baby:"]
+    await i.response.send_message(random.choice(random_responses))
 
-@bot.slash_command()
-async def bean(i, user: disnake.Member):
-    """Bean someone!"""
+@bot.tree.command(description="Bean someone!")
+@app_commands.describe(user="The user to bean.")
+async def bean(i: discord.Interaction, user: discord.Member):
     if user == bot.user:
-        if i.author.id not in BEANED_LIST:
-            BEANED_LIST.append(i.author.id)
-            await i.send("YOU THOUGHT YOU COULD BEAN ME? WELL GUESS WHAT?! IM GONNA BEAN YOU!!!!")
+        if i.user.id not in BEANED_LIST:
+            BEANED_LIST.append(i.user.id)
+            await i.response.send_message("YOU THOUGHT YOU COULD BEAN ME? WELL GUESS WHAT?! IM GONNA BEAN YOU!!!!")
         else:
                          await i.send("i would have an epic monologue about you beaning me but ur already beaned :/")
         return
     if user.id in BEANED_LIST:
-        await i.send("theyre already beaned, chill.",ephemeral=True)
+        await i.response.send_message("theyre already beaned, chill.",ephemeral=True)
         return
     BEANED_LIST.append(user.id)
-    await i.send(f"{user.mention} beaned!")
+    await i.response.send_message(f"{user.mention} beaned!")
 
-@bot.slash_command()
-async def manual_wordgame_trigger(i,word=None):
-    await i.channel.send(f"{i.author.mention} has started a wordgame!")
+@bot.tree.command()
+async def manual_wordgame_trigger(i: discord.Interaction,word: str=None):
+    await i.channel.send(f"{i.user.mention} has started a wordgame!")
     await trigger_wordgame(i.channel.id,word)
 
 @bot.event
-async def on_message(m: disnake.Message):
+async def on_message(m: discord.Message):
     await update_wordgames(m)
 
     if m.author.id in BEANED_LIST:
-        await m.add_reaction("<:bean:1345818012879552605>")
+        try:
+            await m.add_reaction("<:bean:1345818012879552605>")
+        except:
+            await m.add_reaction("🫘")
         BEANED_LIST.remove(m.author.id)
     
 
@@ -212,7 +229,7 @@ async def on_message(m: disnake.Message):
         if message.content == NO_RESPONSE_SET and message.author == bot.user:
             confusedReact = True
     
-    if type(m.channel) == disnake.DMChannel:
+    if type(m.channel) == discord.DMChannel:
         useSend = True
         reply = True
     
@@ -243,7 +260,7 @@ async def on_message(m: disnake.Message):
                             if rand != 2:
                                 await m.reply(NO_RESPONSE_SET)
                             else:
-                                await m.reply(f"\"{m.content}\" :nerd:",allowed_mentions=disnake.AllowedMentions.none)
+                                await m.reply(f"\"{m.content}\" :nerd:",allowed_mentions=discord.AllowedMentions.none)
                         else:
                             rand = random.randint(1,5)
                             if rand != 2:
@@ -257,6 +274,6 @@ async def on_message(m: disnake.Message):
                     try:
                         await m.add_reaction("😕")
                     except:
-                        print(f"couldnt react to {m.author}, probably blocked")    
+                        print(f"couldnt react to {m.author}, probably blocked") 
 
 bot.run(os.environ["CDC_TOKEN"])

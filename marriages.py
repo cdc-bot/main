@@ -1,5 +1,6 @@
-import disnake
-from disnake.ext import commands, tasks
+import discord
+from discord.ext import commands, tasks
+from discord import app_commands
 import json
 import preferences
 
@@ -109,23 +110,22 @@ def get_mentioned_ids(content):
     return ids
 
 class Marriages(commands.Cog):
-    @commands.slash_command()
-    async def marriages(self,i:disnake.ApplicationCommandInteraction):
-        pass
-    @marriages.sub_command()
+    marriages = app_commands.Group(name="marriages",description="Marriage commands.")
+    @marriages.command()
     async def view(self,i):
         """See who's married!"""
         marriages = ""
         for marriage in MARRIAGES:
             marriages = marriages + "\n" + f"<@{marriage[0]}> 💍 <@{marriage[1]}>"
-        await i.send(f"# Current marriages{marriages}",ephemeral=True)
+        await i.response.send_message(f"# Current marriages{marriages}",ephemeral=True)
     
-    @marriages.sub_command()
-    async def divorce(self,i,reason=None):
+    @marriages.command()
+    @app_commands.describe(reason="The reason for the divorce")
+    async def divorce(self,i,reason: str=None):
         """Divorce your partner if you feel that it's necessary. (only usable if married)"""
-        if is_married(i.author.id):
-            partner = get_partner_legacy(i.author.id)
-            marriage = get_marriage(i.author.id)
+        if is_married(i.user.id):
+            partner = get_partner_legacy(i.user.id)
+            marriage = get_marriage(i.user.id)
             MARRIAGES.remove(marriage)
             partner_u = await bot.fetch_user(partner)
             reason_text = "They haven't given a reason as to why."
@@ -133,43 +133,44 @@ class Marriages(commands.Cog):
             if reason != None:
                 reason_text = "This was their reasoning: \"" + reason + "\""
                 reason_text2 = "> " + reason
-            await partner_u.send(f"# Your partner has divorced you\n{i.author.mention} has divorced you. {reason_text}")
-            await i.send(f"# Divorce succeded.\nYou've successfully divorced <@{partner}>.",ephemeral=True)
-            await i.author.send(f"# Divorced\nYou've divorced <@{partner}>\n{reason_text2}")
+            await partner_u.send(f"# Your partner has divorced you\n{i.user.mention} has divorced you. {reason_text}")
+            await i.response.send_message(f"# Divorce succeded.\nYou've successfully divorced <@{partner}>.",ephemeral=True)
+            await i.user.send(f"# Divorced\nYou've divorced <@{partner}>\n{reason_text2}")
             dump_marriages()
         else:
-            await i.send(f"this isnt meant for u, ur not married yet!",ephemeral=True)
+            await i.response.send_message(f"this isnt meant for u, ur not married yet!",ephemeral=True)
 
-    @marriages.sub_command()
-    async def propose(self,i,user: disnake.Member):
+    @marriages.command()
+    @app_commands.describe(user="The person to propose to")
+    async def propose(self,i,user: discord.Member):
         """Propose to someone, maybe you'll get married!"""
-        if user.id == get_partner_legacy(i.author.id):
-            await i.send("ur already married to them, lmao.",ephemeral=True)
+        if user.id == get_partner_legacy(i.user.id):
+            await i.response.send_message("ur already married to them, lmao.",ephemeral=True)
             return
-        if is_married(i.author.id):
-            await i.send("you cheater, of course you cant marry them!!\nyour partner will be notified about this.",ephemeral=True)
+        if is_married(i.user.id):
+            await i.response.send_message("you cheater, of course you cant marry them!!\nyour partner will be notified about this.",ephemeral=True)
 
-            partner_obj = await bot.fetch_user(get_partner_legacy(i.author.id))
-            await partner_obj.send(f"# Cheating notice\nYour partner, {i.author.mention} has just tried to propose to {user.mention}.\nYou can divorce them if you'd like by running **/divorce**")
+            partner_obj = await bot.fetch_user(get_partner_legacy(i.user.id))
+            await partner_obj.send(f"# Cheating notice\nYour partner, {i.user.mention} has just tried to propose to {user.mention}.\nYou can divorce them if you'd like by running **/divorce**")
 
             return
         if user.bot:
-            await i.send("listen, i know you're desperate.. BUT YOU CANT JUST MARRY A FUCKING BOT DUDE.",ephemeral=True)
+            await i.response.send_message("listen, i know you're desperate.. BUT YOU CANT JUST MARRY A FUCKING BOT DUDE.",ephemeral=True)
             return
-        if i.author.id == user.id:
-            await i.send("u cant marry yourself. how would that even work...?",ephemeral=True)
+        if i.user.id == user.id:
+            await i.response.send_message("u cant marry yourself. how would that even work...?",ephemeral=True)
             return
-        if has_proposed(i.author.id):
-            await i.send("chill! you've already proposed to someone!",ephemeral=True)
+        if has_proposed(i.user.id):
+            await i.response.send_message("chill! you've already proposed to someone!",ephemeral=True)
             return
         if is_married(user.id):
-            await i.send(f"{user} is already married.",ephemeral=True)
+            await i.response.send_message(f"{user} is already married.",ephemeral=True)
             return
-        await i.send(f"Dear {user.mention}, {i.author.mention} would like to marry you.\nReact with :ring: to get married!\nReact with :no_entry: to reject/retract this proposal.")
+        await i.response.send_message(f"Dear {user.mention}, {i.user.mention} would like to marry you.\nReact with :ring: to get married!\nReact with :no_entry: to reject/retract this proposal.")
         marriageStarter = await i.original_response()
         await marriageStarter.add_reaction("💍")
         await marriageStarter.add_reaction("⛔")
-        tempDict = {"id":marriageStarter.id,"type":"proposal","partner":user.id,"initiator":i.author.id}
+        tempDict = {"id":marriageStarter.id,"type":"proposal","partner":user.id,"initiator":i.user.id}
         WAITING_FOR_REACTION.append(tempDict)
 
 
@@ -214,7 +215,7 @@ class Marriages(commands.Cog):
                         await bot.get_user(waiting["initiator"]).send(welcome_to_marriage)
                         await bot.get_user(waiting["partner"]).send(welcome_to_marriage)
     @commands.Cog.listener()
-    async def on_message(self,m: disnake.Message):
+    async def on_message(self,m: discord.Message):
         if is_married(m.author.id):
             # cheating checks
             is_mention_cheating = False
@@ -224,14 +225,17 @@ class Marriages(commands.Cog):
                 if mention != str(get_partner_legacy(m.author.id)):
                     is_mention_cheating=True
             if m.reference != None:
-                message = await m.channel.fetch_message(m.reference.message_id)
-                if message.author.id != get_partner_legacy(m.author.id):
-                    is_reply_cheating = True
+                try:
+                    message = await m.channel.fetch_message(m.reference.message_id)
+                    if message.author.id != get_partner_legacy(m.author.id):
+                        is_reply_cheating = True
+                except:
+                    print("failed to get reply")
             if is_reply_cheating or is_mention_cheating:
                 partner_u = await bot.fetch_user(get_partner_legacy(m.author.id))
                 await partner_u.send(f"# Possible cheating suspected\nYour partner has replied to/mentioned another person, you might want to go take a look! {m.jump_url}")
 
-def setup(_bot:commands.Bot):
+async def setup(_bot:commands.Bot):
     global bot
     bot = _bot
-    bot.add_cog(Marriages())
+    await bot.add_cog(Marriages())

@@ -1,5 +1,6 @@
-import disnake
-from disnake.ext import commands, tasks
+import discord
+from discord.ext import commands, tasks
+from discord import app_commands
 import json
 
 bot = None
@@ -28,7 +29,7 @@ class Preference:
 class UserPreferences:
     def __init__(self):
         self.polyamorous = Preference("Polyamorous",bool,False,"Allows you to date multiple people. (Everyone in a marriage needs to have this on)")
-        self.disable_proposals = Preference("Disable Proposals",bool,False,"Disallows people proposing to you.")
+        self.disable_proposals = Preference("Disable Proposals",bool,False,"Disallows people from proposing to you.")
         self.defer_cheating_alerts = Preference("Defer Cheating Alerts",bool,False,"Disable sending cheating alerts in real time, only deliver them every 24 hours.")
     def from_json(self,dict):
         for key in dict:
@@ -84,12 +85,12 @@ class UserPreferencesManager:
 
 manager = UserPreferencesManager()
 
-class SelectDropdown(disnake.ui.StringSelect):
+class SelectDropdown(discord.ui.Select):
     settings = None
     def carry_settings(self,settings):
         self.settings = settings
-    async def callback(self, interaction:disnake.MessageInteraction):
-        settingname = interaction.values[0]
+    async def callback(self, interaction:discord.Interaction):
+        settingname = self.values[0]
         setting = None
         for stg in self.settings.__dict__:
             if self.settings.__dict__[stg].name == settingname:
@@ -97,14 +98,14 @@ class SelectDropdown(disnake.ui.StringSelect):
         modal = ChangeModal(setting,interaction)
         await interaction.response.send_modal(modal)
 
-class ChangeModal(disnake.ui.Modal):
-    def __init__(self,setting,dd_interaction):
+class ChangeModal(discord.ui.Modal):
+    new_value = discord.ui.TextInput(label="New value",custom_id="new_value")
+    def __init__(self,setting,dd_interaction:discord.Interaction):
         self.setting = setting
         self.dd_interaction = dd_interaction
-        super().__init__(title=f"Modifying '{setting.name}'",components=[])
-        self.add_text_input(label="New value",custom_id="new_value")
-    async def callback(self, interaction:disnake.ModalInteraction):
-        text_given = interaction.values["new_value"]
+        super().__init__(title=f"Modifying '{setting.name}'")
+    async def on_submit(self, interaction:discord.Interaction):
+        text_given = self.new_value.value
         dont_convert = False
 
         if self.setting.type.__name__ == "bool":
@@ -116,7 +117,7 @@ class ChangeModal(disnake.ui.Modal):
                 dont_convert = True
             else:
                 await self.dd_interaction.edit_original_response(content=":x: The value as to be `True` or `False`.",embeds=[],view=None)
-                await interaction.send("_ _",ephemeral=True,delete_after=0)
+                await interaction.response.send_message("_ _",ephemeral=True,delete_after=0)
                 return
         
         if not dont_convert:
@@ -127,10 +128,9 @@ class ChangeModal(disnake.ui.Modal):
             self.setting.set(conversion)
         
         await self.dd_interaction.edit_original_response(content=f"**{self.setting.name}** is now set to `{self.setting.value}`.",embeds=[],view=None)
-        await interaction.send("_ _",ephemeral=True,delete_after=0)
+        await interaction.response.send_message("_ _",ephemeral=True,delete_after=0)
         
-
-class SelectView(disnake.ui.View):
+class SelectView(discord.ui.View):
     def __init__(self,uid):
         self.author_id = uid
         super().__init__()
@@ -142,21 +142,21 @@ class SelectView(disnake.ui.View):
                 label = val.name
                 emoji = "🎛️"
                 description = f"{val.value} | {val.type.__name__}"
-                options.append(disnake.SelectOption(label=label,emoji=emoji,description=description))
-        #disnake.SelectOption(label="Option 1",emoji="👌",description="This is option 1!"),
+                options.append(discord.SelectOption(label=label,emoji=emoji,description=description))
+        #discord.SelectOption(label="Option 1",emoji="👌",description="This is option 1!"),
         dropdown = SelectDropdown(placeholder="Select a setting to change",max_values=1,min_values=1,options=options)
         dropdown.carry_settings(user_config)
         self.add_item(dropdown)
         #self.add_string_select(placeholder="a",max_values=1,min_values=1,options=["true","false"])
-    async def interaction_check(self,i:disnake.MessageInteraction):
-        if i.author.id != self.author_id:
-            await i.send(content="this isn't yours",ephemeral=True)
+    async def interaction_check(self,i:discord.MessageInteraction):
+        if i.user.id != self.author_id:
+            await i.response.send_message(content="this isn't yours",ephemeral=True)
             return False
         return True
 
-async def preference_autocomp(i:disnake.Interaction,current:str):
+async def preference_autocomp(i:discord.Interaction,current:str):
     global manager
-    user_config = manager.get_user(i.author.id)
+    user_config = manager.get_user(i.user.id)
     mc = []
     for key in user_config.__dict__:
             val = user_config.__dict__[key]
@@ -169,22 +169,22 @@ async def preference_autocomp(i:disnake.Interaction,current:str):
     return ret[:10]
 
 class Config(commands.Cog):
-    @commands.slash_command()
+    @app_commands.command()
     async def config(self,i):
         """View and configure your user settings."""
         global manager
-        user_config = manager.get_user(i.author.id)
+        user_config = manager.get_user(i.user.id)
         desc = ""
         for key in user_config.__dict__:
             val = user_config.__dict__[key]
             if isinstance(val,Preference):
                 desc = desc + "\n" + "**" + val.name + "**" + ": " + str(val.value) + "\n-# " + val.description
-        embed = disnake.Embed(title="Current Configuration",description=desc)
-        await i.send(embed=embed,view=SelectView(i.author.id),ephemeral=True)
+        embed = discord.Embed(title="Current Configuration",description=desc)
+        await i.response.send_message(embed=embed,view=SelectView(i.user.id),ephemeral=True)
 
 
 
-def setup(_bot:commands.Bot):
+async def setup(_bot:commands.Bot):
     global bot
     bot = _bot
-    bot.add_cog(Config())
+    await bot.add_cog(Config())

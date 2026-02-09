@@ -1,5 +1,6 @@
-import disnake
-from disnake.ext import commands, tasks
+import discord
+from discord.ext import commands, tasks
+from discord import app_commands
 import json
 import time
 import random
@@ -47,7 +48,21 @@ class CurrencyManager:
         self.try_load()
     
     def format_price(self,p):
-        return f"{p}{self.currency}"
+        return f"{self.abbreviate_price(p)}{self.currency}"
+    
+    def abbreviate_price(self,p):
+        absolute = abs(p)
+        if absolute >= 	1000000000000000:
+            return f"{round(p/1000000000000000,2)}Q"
+        if absolute >= 1000000000000:
+            return f"{round(p/1000000000000,2)}T"
+        if absolute >= 1000000000:
+            return f"{round(p/1000000000,2)}B"
+        if absolute >= 1000000:
+            return f"{round(p/1000000,2)}M"
+        if absolute >= 1000:
+            return f"{round(p/1000,2)}K"
+        return str(p)
 
     def get_user(self,id):
         for user in self.data:
@@ -204,7 +219,7 @@ ITEM_MANAGER.add_item("debt_shield","Debt Shield",True).set_usage_callback(on_de
 ITEM_MANAGER.add_item("g_syringe","Golden Syringe",True).set_usage_callback(on_syringe)
 ITEM_MANAGER.add_item("lie","Lie",True).set_usage_callback(on_lie)
 
-async def buy_autocomp(i:disnake.Interaction,current:str):
+async def buy_autocomp(i:discord.Interaction,current:str):
     global CURRENCY_SHOP
     global CURRENCY_MANAGER
     global ITEM_MANAGER
@@ -215,13 +230,15 @@ async def buy_autocomp(i:disnake.Interaction,current:str):
     for item in items:
         if item.name.find(current) != -1 or current == "":
             price = CURRENCY_SHOP.get_item(item.name).price
-            ret.append(f"{item.name} - {item.display_name}: {CURRENCY_MANAGER.format_price(price)}")
+            choice_str = f"{item.name} - {item.display_name}: {CURRENCY_MANAGER.format_price(price)}"
+            choice = app_commands.Choice(name=choice_str,value=choice_str)
+            ret.append(choice)
     return ret[:10]
 
-async def item_autocomp(i:disnake.Interaction,current:str):
+async def item_autocomp(i:discord.Interaction,current:str):
     global ITEM_MANAGER
     global CURRENCY_MANAGER
-    user = CURRENCY_MANAGER.get_user(i.author.id)
+    user = CURRENCY_MANAGER.get_user(i.user.id)
     mc = []
     for item in user.inventory:
         if item.find(current) != -1 or current == "":
@@ -229,13 +246,15 @@ async def item_autocomp(i:disnake.Interaction,current:str):
     ret = []
     for item in mc:
         item_data = ITEM_MANAGER.get_item(item)
-        ret.append(f"{item_data.name} - {item_data.display_name}")
+        choice_str = f"{item_data.name} - {item_data.display_name}"
+        choice = app_commands.Choice(name=choice_str,value=choice_str)
+        ret.append(choice)
     return ret[:10]
 
-async def item_autocomp_usable(i:disnake.Interaction,current:str):
+async def item_autocomp_usable(i:discord.Interaction,current:str):
     global ITEM_MANAGER
     global CURRENCY_MANAGER
-    user = CURRENCY_MANAGER.get_user(i.author.id)
+    user = CURRENCY_MANAGER.get_user(i.user.id)
     mc = []
     for item in user.inventory:
         if item.find(current) != -1 or current == "":
@@ -245,29 +264,31 @@ async def item_autocomp_usable(i:disnake.Interaction,current:str):
         item_data = ITEM_MANAGER.get_item(item)
         if not item_data.usable:
             continue
-        ret.append(f"{item_data.name} - {item_data.display_name}")
+        choice_str = f"{item_data.name} - {item_data.display_name}"
+        choice = choice = app_commands.Choice(name=choice_str,value=choice_str)
+        ret.append(choice)
     return ret[:10]
 
-async def job_autocomplete(i:disnake.ApplicationCommandInteraction,curr:str):
+async def job_autocomplete(i:discord.Interaction,curr:str):
     global JOB_MANAGER
     ret = []
     for job in JOB_MANAGER.jobs:
         if job.name.find(curr) != -1 or curr == "":
-            ret.append(f"{job.name} - {job.display_name}")
+            choice_str = f"{job.name} - {job.display_name}"
+            choice = app_commands.Choice(name=choice_str,value=choice_str)
+            ret.append(choice)
     return ret
 
 class Currency(commands.Cog):
-    @commands.slash_command()
-    async def currency(self,i):
-        pass
+    currency = app_commands.Group(name="currency",description="Currency commands")
 
-    @currency.sub_command()
-    async def gamble(self,i: disnake.ApplicationCommandInteraction):
+    @currency.command()
+    async def gamble(self,i: discord.Interaction):
         """Let's go gambling!"""
         global CURRENCY_MANAGER
-        await i.send("*Spinning the wheel...*")
+        await i.response.send_message("*Spinning the wheel...*")
         time.sleep(0.5)
-        user = CURRENCY_MANAGER.get_user(i.author.id)
+        user = CURRENCY_MANAGER.get_user(i.user.id)
         money = user.money
         min_boundary = -money
         max_boundary = money*2
@@ -280,53 +301,54 @@ class Currency(commands.Cog):
         if random.randint(1,5) == 2 and not user.has_item("debt_shield"):
             gamble = min_boundary*9
             ultra_debt = True
-        str = CURRENCY_MANAGER.update_balance(i.author.id,gamble)
-        await i.edit_original_message(f"{':chart_with_upwards_trend: You got' if gamble > 0 else ':chart_with_downwards_trend: You lost'} {CURRENCY_MANAGER.format_price(abs(gamble))}\n-# {str.as_codeblock()} \n{'-# Woah! Stuck in debt while gambling? Use a **Debt Prodector** or buy the **Debt Shield** and NEVER go in debt again!' if ultra_debt == True else ''}")
+        str = CURRENCY_MANAGER.update_balance(i.user.id,gamble)
+        await i.edit_original_response(content=f"{':chart_with_upwards_trend: You got' if gamble > 0 else ':chart_with_downwards_trend: You lost'} {CURRENCY_MANAGER.format_price(abs(gamble))}\n-# {str.as_codeblock()} \n{'-# Woah! Stuck in debt while gambling? Use a **Debt Prodector** or buy the **Debt Shield** and NEVER go in debt again!' if ultra_debt == True else ''}")
 
-    @currency.sub_command()
-    async def balance(self,i:disnake.ApplicationCommandInteraction,u:disnake.Member=None):
+    @currency.command()
+    async def balance(self,i:discord.Interaction,u:discord.Member=None):
         """Check yours or someone else's balance."""
         global CURRENCY_MANAGER
         if u == None:
-            u = i.author
+            u = i.user
         user = CURRENCY_MANAGER.get_user(u.id)
-        await i.send(f"""{f"{u.mention}'s" if u.id != i.author.id else "Your"} balance is {CURRENCY_MANAGER.format_price(user.money)}""")
+        await i.response.send_message(f"""{f"{u.mention}'s" if u.id != i.user.id else "Your"} balance is {CURRENCY_MANAGER.format_price(user.money)}""")
 
-    @currency.sub_command()
-    async def pay(self,i:disnake.ApplicationCommandInteraction,u:disnake.Member,amt:int):
+    @currency.command()
+    async def pay(self,i:discord.Interaction,u:discord.Member,amt:int):
         """Pay someone."""
         if amt < 0:
-            await i.send("You can't pay negative money")
+            await i.response.send_message("You can't pay negative money")
             return
         global CURRENCY_MANAGER
-        user1 = CURRENCY_MANAGER.get_user(i.author.id)
+        user1 = CURRENCY_MANAGER.get_user(i.user.id)
         if user1.money < amt:
-            await i.send("You don't have enough money for this transaction.")
+            await i.response.send_message("You don't have enough money for this transaction.")
             return
-        transaction1 = CURRENCY_MANAGER.update_balance(i.author.id,-amt)
+        transaction1 = CURRENCY_MANAGER.update_balance(i.user.id,-amt)
         transaction2 = CURRENCY_MANAGER.update_balance(u.id,amt)
-        await i.send(f"You paid {u.mention} {CURRENCY_MANAGER.format_price(amt)}\n-# Transactions made:\n-# {i.author.mention}: {transaction1.as_codeblock()}\n-# {u.mention}: {transaction2.as_codeblock()}")
+        await i.response.send_message(f"You paid {u.mention} {CURRENCY_MANAGER.format_price(amt)}\n-# Transactions made:\n-# {i.user.mention}: {transaction1.as_codeblock()}\n-# {u.mention}: {transaction2.as_codeblock()}")
 
-    @currency.sub_command()
-    async def work(self,i:disnake.ApplicationCommandInteraction):
+    @currency.command()
+    async def work(self,i:discord.Interaction):
         """Work."""
         global CURRENCY_MANAGER
         global JOB_MANAGER
-        user = CURRENCY_MANAGER.get_user(i.author.id)
+        user = CURRENCY_MANAGER.get_user(i.user.id)
         job = JOB_MANAGER.get_job(user.job)
         time_now = datetime.datetime.now().timestamp()
         diff = time_now - user.last_worked
         if diff < JOB_MANAGER.hour:
-            await i.send(f"You've only started working, wait for the hour to end ({round(JOB_MANAGER.hour-diff)} seconds)")
+            await i.response.send_message(f"You've only started working, wait for the hour to end ({round(JOB_MANAGER.hour-diff)} seconds)")
             return
         extra = random.randint(-round(job.wage/2),round(job.wage/2))
-        transaction = CURRENCY_MANAGER.update_balance(i.author.id,job.wage+extra)
+        transaction = CURRENCY_MANAGER.update_balance(i.user.id,job.wage+extra)
         work_msgs = ["You worked tirelessly..","You worked.......","You went to work!"]
-        await i.send(f"-# *{random.choice(work_msgs)}*\nYour **{job.display_name}** job has earned you {CURRENCY_MANAGER.format_price(job.wage+extra)}!\n-# {transaction.as_codeblock()}")
+        await i.response.send_message(f"-# *{random.choice(work_msgs)}*\nYour **{job.display_name}** job has earned you {CURRENCY_MANAGER.format_price(job.wage+extra)}!\n-# {transaction.as_codeblock()}")
         user.last_worked = time_now
 
-    @currency.sub_command()
-    async def buy(self,i:disnake.ApplicationCommandInteraction,item = commands.Param(autocomplete=buy_autocomp)):
+    @currency.command()
+    @app_commands.autocomplete(item=buy_autocomp)
+    async def buy(self,i:discord.Interaction,item:str):
         """Buy something from the shop."""
         global ITEM_MANAGER
         global CURRENCY_SHOP
@@ -334,64 +356,66 @@ class Currency(commands.Cog):
         d = item.split(" - ")
         item = CURRENCY_SHOP.get_item(d[0])
         if item == None:
-            await i.send("Bad item")
+            await i.response.send_message("Bad item")
             return
         item2 = ITEM_MANAGER.get_item(d[0])
-        user = CURRENCY_MANAGER.get_user(i.author.id)
+        user = CURRENCY_MANAGER.get_user(i.user.id)
         if user.money < item.price:
-            await i.send(f"You don't have enough money to buy **{item2.display_name}**!")
+            await i.response.send_message(f"You don't have enough money to buy **{item2.display_name}**!")
             return
-        transaction = CURRENCY_MANAGER.update_balance(i.author.id,-item.price)
+        transaction = CURRENCY_MANAGER.update_balance(i.user.id,-item.price)
         user.add_item(item.name)
-        await i.send(f"You bought **{item2.display_name}** for {CURRENCY_MANAGER.format_price(item.price)}!\n-# {transaction.as_codeblock()}")
+        await i.response.send_message(f"You bought **{item2.display_name}** for {CURRENCY_MANAGER.format_price(item.price)}!\n-# {transaction.as_codeblock()}")
 
-    @currency.sub_command()
-    async def use_item(self,i:disnake.ApplicationCommandInteraction,item=commands.Param(autocomplete=item_autocomp_usable)):
+    @currency.command()
+    @app_commands.autocomplete(item=item_autocomp_usable)
+    async def use_item(self,i:discord.Interaction,item:str):
         """Use an item."""
         d = item.split(" - ")
         global ITEM_MANAGER
         global CURRENCY_MANAGER
         item = ITEM_MANAGER.get_item(d[0])
         if item == None:
-            await i.send("Bad item")
+            await i.response.send_message("Bad item")
             return
-        user = CURRENCY_MANAGER.get_user(i.author.id)
+        user = CURRENCY_MANAGER.get_user(i.user.id)
         if item.name not in user.inventory:
-            await i.send("You don't have this item")
+            await i.response.send_message("You don't have this item")
             return
         if not item.usable:
-            await i.send("You can't use this item")
+            await i.response.send_message("You can't use this item")
             return
         use = item.on_use(user)
-        await i.send(f"-# *You used the **{item.display_name}**.*\n{use[0]}")
+        await i.response.send_message(f"-# *You used the **{item.display_name}**.*\n{use[0]}")
         if use[1]:
             user.remove_item(item.name)
 
-    @currency.sub_command()
-    async def give_item(self,i:disnake.ApplicationCommandInteraction,u:disnake.Member,item=commands.Param(autocomplete=item_autocomp)):
+    @currency.command()
+    @app_commands.autocomplete(item=item_autocomp)
+    async def give_item(self,i:discord.Interaction,u:discord.Member,item:str):
         """Give someone an item."""
         d = item.split(" - ")
         global ITEM_MANAGER
         global CURRENCY_MANAGER
         item = ITEM_MANAGER.get_item(d[0])
         if item == None:
-            await i.send("Bad item")
+            await i.response.send_message("Bad item")
             return
-        user = CURRENCY_MANAGER.get_user(i.author.id)
+        user = CURRENCY_MANAGER.get_user(i.user.id)
         user2 = CURRENCY_MANAGER.get_user(u.id)
         if item.name not in user.inventory:
-            await i.send("You don't have this item")
+            await i.response.send_message("You don't have this item")
             return
         user.remove_item(item.name)
         user2.add_item(item.name)
-        await i.send(f"You gave {u.mention} the **{item.display_name}**, you're so kind!")
+        await i.response.send_message(f"You gave {u.mention} the **{item.display_name}**, you're so kind!")
 
-    @currency.sub_command()
-    async def inventory(self,i:disnake.ApplicationCommandInteraction):
+    @currency.command()
+    async def inventory(self,i:discord.Interaction):
         """Check your inventory."""
         global CURRENCY_MANAGER
         global ITEM_MANAGER
-        user = CURRENCY_MANAGER.get_user(i.author.id)
+        user = CURRENCY_MANAGER.get_user(i.user.id)
         ret = "Your items:"
         ret_initial = ret
         footer = "You can use /currency use_item on some of these!"
@@ -401,13 +425,13 @@ class Currency(commands.Cog):
         if ret == ret_initial:
             ret = "You have no items."
             footer = None
-        embed = disnake.Embed(title="Inventory",description=ret,color=disnake.Color.gold())
+        embed = discord.Embed(title="Inventory",description=ret,color=discord.Color.gold())
         if footer != None:
             embed.set_footer(text=footer)
-        await i.send(embed=embed)
+        await i.response.send_message(embed=embed)
 
-    @currency.sub_command()
-    async def shop(self,i:disnake.ApplicationCommandInteraction):
+    @currency.command()
+    async def shop(self,i:discord.Interaction):
         """Check the item shop."""
         global CURRENCY_SHOP
         global CURRENCY_MANAGER
@@ -417,13 +441,14 @@ class Currency(commands.Cog):
         for it in items:
             item = ITEM_MANAGER.get_item(it.name)
             ret = ret + "\n" + "- " + f"**{item.display_name}** ({item.name}) - {CURRENCY_MANAGER.format_price(it.price)}"
-        embed = disnake.Embed(title="Shop",description=ret,color=disnake.Color.purple())
-        balance = CURRENCY_MANAGER.format_price(CURRENCY_MANAGER.get_user(i.author.id).money)
+        embed = discord.Embed(title="Shop",description=ret,color=discord.Color.purple())
+        balance = CURRENCY_MANAGER.format_price(CURRENCY_MANAGER.get_user(i.user.id).money)
         embed.set_footer(text=f"Your balance: {balance} | Use /currency buy to buy an item from here!")
-        await i.send(embed=embed)
+        await i.response.send_message(embed=embed)
 
-    @currency.sub_command()
-    async def job_apply(self,i:disnake.ApplicationCommandInteraction,job=commands.Param(autocomplete=job_autocomplete)):
+    @currency.command()
+    @app_commands.autocomplete(job=job_autocomplete)
+    async def job_apply(self,i:discord.Interaction,job:str):
         """Apply for a job"""
         global JOB_MANAGER
         global ITEM_MANAGER
@@ -431,9 +456,9 @@ class Currency(commands.Cog):
         p = job.split(" - ")
         job = JOB_MANAGER.get_job(p[0])
         if job == None:
-            await i.send("bad job")
+            await i.response.send_message("bad job")
             return
-        user = CURRENCY_MANAGER.get_user(i.author.id)
+        user = CURRENCY_MANAGER.get_user(i.user.id)
         to_have = []
         inv = user.inventory.copy()
         for item in job.required_items:
@@ -446,20 +471,20 @@ class Currency(commands.Cog):
             for item in to_have:
                 data = ITEM_MANAGER.get_item(item)
                 str = str + "\n" + "- " + f"**{data.display_name}** ({data.name})"
-            embed = disnake.Embed(title="Rejected",description=str,color=disnake.Color.red())
+            embed = discord.Embed(title="Rejected",description=str,color=discord.Color.red())
             embed.set_footer(text="Please buy them and run this command again if you'd like to reapply.")
-            await i.send(embed=embed)
+            await i.response.send_message(embed=embed)
             return
         user.job = job.name
-        embed = disnake.Embed(title="Accepted",description=f"You've been accepted for the **{job.display_name}** ({job.name}) job!",color=disnake.Color.green())
+        embed = discord.Embed(title="Accepted",description=f"You've been accepted for the **{job.display_name}** ({job.name}) job!",color=discord.Color.green())
         embed.set_footer(text="Use /currency work to work.")
-        await i.send(embed=embed)
+        await i.response.send_message(embed=embed)
     
-    @currency.sub_command()
-    async def leaderboard(self,i:disnake.ApplicationCommandInteraction,debt:bool=False):
+    @currency.command()
+    async def leaderboard(self,i:discord.Interaction,debt:bool=False):
         """View the leaderboard."""
         global CURRENCY_MANAGER
-        embed = disnake.Embed(title=f"{'Currency' if not debt else 'Debt'} Leaderboard",colour=disnake.Color.blurple())
+        embed = discord.Embed(title=f"{'Currency' if not debt else 'Debt'} Leaderboard",colour=discord.Color.blurple())
         leaderboard = sorted(CURRENCY_MANAGER.data,key=lambda k: k.money)
         if not debt:
             leaderboard.reverse()
@@ -470,21 +495,22 @@ class Currency(commands.Cog):
         shown = 1
         for place in leaderboard:
             if shown <= lb_limit:
-                embed.add_field(f"{placement}.",f"<@{place.id}>: `{CURRENCY_MANAGER.format_price(place.money)}`",inline=False)
-            if place.id == str(i.author.id):
+                money = CURRENCY_MANAGER.format_price(place.money)
+                embed.add_field(name=f"{placement}.",value=f"<@{place.id}>: `{money}`",inline=False)
+            if place.id == str(i.user.id):
                 my_placement = placement
             placement += placement_mod
             shown += 1
-        embed.set_footer(text=f"Your placement is #{my_placement} "+f"{f'| Balance {CURRENCY_MANAGER.format_price(CURRENCY_MANAGER.get_user(i.author.id).money)}' if my_placement > lb_limit else ''}")
-        await i.send(embed=embed)
+        embed.set_footer(text=f"Your placement is #{my_placement} "+f"{f'| Balance {CURRENCY_MANAGER.format_price(CURRENCY_MANAGER.get_user(i.user.id).money)}' if my_placement > lb_limit else ''}")
+        await i.response.send_message(embed=embed)
 
-    @currency.sub_command()
-    async def lie(self,i:disnake.ApplicationCommandInteraction):
+    @currency.command()
+    async def lie(self,i:discord.Interaction):
         global CURRENCY_MANAGER
-        await i.send("You lied.")
-        CURRENCY_MANAGER.get_user(i.author.id).add_item("lie")
+        await i.response.send_message("You lied.")
+        CURRENCY_MANAGER.get_user(i.user.id).add_item("lie")
 
-def setup(_bot: commands.Bot):
+async def setup(_bot: commands.Bot):
     global bot
     bot = _bot
-    _bot.add_cog(Currency())
+    await _bot.add_cog(Currency())
