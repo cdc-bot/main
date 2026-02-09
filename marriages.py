@@ -476,7 +476,6 @@ class Marriages(commands.Cog):
             proposal.processing = False
             return
         else:
-            proposal.processing = True
             await reaction.remove(user)
             proposal.processing = False
             return
