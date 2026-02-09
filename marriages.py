@@ -440,7 +440,7 @@ class Marriages(commands.Cog):
                         if p.recipient == proposal.proposer or p.recipient == proposal.recipient:
                             channel = await bot.fetch_channel(p.channel_id)
                             message = await channel.fetch_message(p.message_id)
-                            await proposal_message.reply(f"Sorry, <@{p.proposer}>, <@{p.recipient}> got married.")
+                            await message.reply(f"Sorry, <@{p.proposer}>, <@{p.recipient}> got married.")
                             await message.edit(content="Proposal canceled!")
                             await message.clear_reactions()
                             WAITING_FOR_REACTION.remove(p)
