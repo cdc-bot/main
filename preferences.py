@@ -5,7 +5,7 @@ import json
 bot = None
 
 class Preference:
-    def __init__(self,name,type,default=None):
+    def __init__(self,name,type,default,desc):
         self.name = name
         self.type = type
         self.default = default
@@ -13,6 +13,7 @@ class Preference:
             self.value = type()
         else:
             self.value = default
+        self.description = desc
     def get(self):
         return self.value
     def set(self,value):
@@ -26,13 +27,15 @@ class Preference:
 
 class UserPreferences:
     def __init__(self):
-        self.polyamorous = Preference("Polyamorous",bool,False)
-        self.disable_proposals = Preference("Disable Proposals",bool,False)
-        self.defer_cheating_alerts = Preference("Defer Cheating Alerts",bool,False)
-        self.size = Preference("Size",float,1)
+        self.polyamorous = Preference("Polyamorous",bool,False,"Allows you to date multiple people. (Everyone in a marriage needs to have this on)")
+        self.disable_proposals = Preference("Disable Proposals",bool,False,"Disallows people proposing to you.")
+        self.defer_cheating_alerts = Preference("Defer Cheating Alerts",bool,False,"Disable sending cheating alerts in real time, only deliver them every 24 hours.")
     def from_json(self,dict):
         for key in dict:
-            self.__dict__[key].set_impl(dict[key])
+            try:
+                self.__dict__[key].set_impl(dict[key])
+            except KeyError:
+                print("key",key,"removed - preferences")
     def to_json_safe_dict(self):
         dict = {}
         for key in self.__dict__:
@@ -175,7 +178,7 @@ class Config(commands.Cog):
         for key in user_config.__dict__:
             val = user_config.__dict__[key]
             if isinstance(val,Preference):
-                desc = desc + "\n" + "**" + val.name + "**" + ": " + str(val.value)
+                desc = desc + "\n" + "**" + val.name + "**" + ": " + str(val.value) + "\n-# " + val.description
         embed = disnake.Embed(title="Current Configuration",description=desc)
         await i.send(embed=embed,view=SelectView(i.author.id),ephemeral=True)
 
