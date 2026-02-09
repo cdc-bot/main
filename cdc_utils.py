@@ -15,7 +15,12 @@ class NumberAbbreviations:
         absolute = abs(n)
         for abbreviation in self.abbreviations:
             if absolute > self.abbreviations[abbreviation]: 
-                return f"{round(n/self.abbreviations[abbreviation],2)}{abbreviation}"
+                number = 0
+                try:
+                    number = round(n/self.abbreviations[abbreviation],2)
+                except:
+                    number = round(int(n)//int(self.abbreviations[abbreviation]),2)
+                return f"{number}{abbreviation}"
         return n
     def unpack(self,n_str:str):
         for abbreviation in self.abbreviations:
