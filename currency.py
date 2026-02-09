@@ -5,6 +5,7 @@ import json
 import time
 import random
 import datetime
+import cdc_utils
 
 bot = None
 
@@ -48,21 +49,7 @@ class CurrencyManager:
         self.try_load()
     
     def format_price(self,p):
-        return f"{self.abbreviate_price(p)}{self.currency}"
-    
-    def abbreviate_price(self,p):
-        absolute = abs(p)
-        if absolute >= 	1000000000000000:
-            return f"{round(p/1000000000000000,2)}Q"
-        if absolute >= 1000000000000:
-            return f"{round(p/1000000000000,2)}T"
-        if absolute >= 1000000000:
-            return f"{round(p/1000000000,2)}B"
-        if absolute >= 1000000:
-            return f"{round(p/1000000,2)}M"
-        if absolute >= 1000:
-            return f"{round(p/1000,2)}K"
-        return str(p)
+        return f"{cdc_utils.number_abbreviation.abbrevate(p)}{self.currency}"
 
     def get_user(self,id):
         for user in self.data:
@@ -314,8 +301,10 @@ class Currency(commands.Cog):
         await i.response.send_message(f"""{f"{u.mention}'s" if u.id != i.user.id else "Your"} balance is {CURRENCY_MANAGER.format_price(user.money)}""")
 
     @currency.command()
-    async def pay(self,i:discord.Interaction,u:discord.Member,amt:int):
+    async def pay(self,i:discord.Interaction,u:discord.Member,amt:str):
         """Pay someone."""
+        payment = cdc_utils.number_abbreviation.unpack(amt)
+        amt = payment
         if amt < 0:
             await i.response.send_message("You can't pay negative money")
             return
