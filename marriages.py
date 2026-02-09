@@ -262,19 +262,22 @@ class MarriageManager:
         file.write(c)
         file.close()
     def try_load(self):
-        file = open("./marriages.json","r")
-        c = file.read()
-        file.close()
-        j = json.loads(c)
-        for k in j:
-            v = j[k]
-            if k == "marriages":
-                for marriage in v:
-                    _marriage = Marriage([])
-                    _marriage.from_data(marriage)
-                    self.marriages.append(_marriage)
-            else:
-                self.__dict__[k] = v
+        try:
+            file = open("./marriages.json","r")
+            c = file.read()
+            file.close()
+            j = json.loads(c)
+            for k in j:
+                v = j[k]
+                if k == "marriages":
+                    for marriage in v:
+                        _marriage = Marriage([])
+                        _marriage.from_data(marriage)
+                        self.marriages.append(_marriage)
+                else:
+                    self.__dict__[k] = v
+        except:
+            print("loading default config - marriages")
     def to_json(self):
         dict = {}
         for key in self.__dict__:
