@@ -179,7 +179,6 @@ async def dev(i,cmd: str):
         return
     await i.response.send_message("not a command")
 
-
 @bot.tree.command()
 async def opinion(i):
     """Tells you what the bot "thinks" you are."""
