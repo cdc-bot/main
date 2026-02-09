@@ -484,7 +484,8 @@ class Currency(commands.Cog):
         shown = 1
         for place in leaderboard:
             if shown <= lb_limit:
-                money = CURRENCY_MANAGER.format_price(place.money)
+                #money = CURRENCY_MANAGER.format_price(place.money)
+                money = "abc"
                 if len(money) > 50:
                     money = "help me"
                 embed.add_field(name=f"{placement}.",value=f"<@{place.id}>: `{money}`",inline=False)
