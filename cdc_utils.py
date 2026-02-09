@@ -55,7 +55,3 @@ number_abbreviation.add_abbreviation("B",9)
 number_abbreviation.add_abbreviation("M",6)
 number_abbreviation.add_abbreviation("K",3)
 #number_abbreviation.add_abbreviation("GPLEX",pow(10,100))
-
-while True:
-    testing = input("enter string: ")
-    print(char_limit(testing,15))
