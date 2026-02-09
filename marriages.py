@@ -162,7 +162,7 @@ class MarriageManager:
         partners = marriage.get_user_partners(user)
         marriage.register_cheating(user)
         for partner in partners:
-            if not preferences.manager.get_user(partner).defer_cheating_alerts.get() or len(marriage.people)>2:
+            if not preferences.manager.get_user(partner).defer_cheating_alerts.get() and len(marriage.people)<=2:
                 user = await bot.fetch_user(partner)
                 await user.send(msg)
     
@@ -504,7 +504,7 @@ async def send_out_deferred_cheating():
                 total_cheats = 0
                 for cheater in marriage.cheating:
                     value = marriage.cheating[cheater]
-                    if cheater != member:
+                    if cheater != str(member):
                         total_cheats += value
                         plural = "s"
                         if value == 1:
@@ -520,7 +520,7 @@ async def send_out_deferred_cheating():
                     bad_relationship_score = 4
                 if total_cheats > 1000:
                     bad_relationship_score = 5
-                message_text = header+f"\nBad relationship score: {bad_relationship_score}/5"
+                message_text = header+f"\n- Total cheating incidents: {total_cheats}\n- Bad relationship score: {bad_relationship_score}/5"
                 user = await bot.fetch_user(member)
                 await user.send(content=message_text,embed=embed)
         marriage.flush_cheating()
