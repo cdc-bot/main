@@ -57,10 +57,13 @@ def get_partner_legacy(id):
 def get_partners(id):
     ret = []
     marriage = get_marriage(id)
-    for partner in marriage:
-        if partner != id:
-            ret.append(id)
-    return ret
+    try:
+        for partner in marriage:
+            if partner != id:
+                ret.append(id)
+        return ret
+    except:
+        return []
 
 def get_marriage(id):
     for marriage in MARRIAGES:
