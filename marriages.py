@@ -325,7 +325,12 @@ class Marriages(commands.Cog):
 
             
 
-
+    @marriages.command()
+    async def request_cheating_stats(self,i:discord.Interaction):
+        if not MARRIAGE_MANAGER.is_married(i.user):
+            await i.response.send_message("you're not married",ephemeral=True)
+        send_cheating_stats(MARRIAGE_MANAGER.get_marriage(i.user.id),i.user.id)
+        await i.response.send_message("cheating stats sent")
     
     @marriages.command()
     @app_commands.describe(reason="The reason for the divorce")
@@ -503,41 +508,44 @@ class Marriages(commands.Cog):
             if is_mention_cheating or is_reply_cheating:
                 await MARRIAGE_MANAGER.send_cheating_msg_to_partners(m.author.id,f"# Possible cheating suspected\nYour partner, <@{m.author.id}>, has replied to/mentioned another person outside of your marriage, you might want to go take a look! {m.jump_url}")
 
+async def send_cheating_stats(marriage: Marriage,member:int):
+    deferred = preferences.manager.get_user(member).defer_cheating_alerts.get()
+    if deferred or len(marriage.people) > 2:
+        header = "# Cheating stats for the last 24h"
+        embed = discord.Embed(title=None)
+        bad_relationship_score = 0
+        total_cheats = 0
+        for cheater in marriage.cheating:
+            value = marriage.cheating[cheater]
+            if cheater != str(member):
+                total_cheats += value
+                plural = "s"
+                if value == 1:
+                    plural = ""
+                embed.add_field(inline=True,name="Cheater",value=f"> <@{cheater}>\n> Cheated: {value} time{plural}")
+        if total_cheats > 50:
+            bad_relationship_score = 1
+        if total_cheats > 100:
+            bad_relationship_score = 2
+        if total_cheats > 200:
+            bad_relationship_score = 3
+        if total_cheats > 500:
+            bad_relationship_score = 4
+        if total_cheats > 1000:
+            bad_relationship_score = 5
+        message_text = header+f"\n- Total cheating incidents: {total_cheats}\n- Bad relationship score: {bad_relationship_score}/5"
+        user = await bot.fetch_user(member)
+        try:
+            await user.send(content=message_text,embed=embed)
+        except:
+            await user.send(content=message_text+"\n-# (no one cheated)",embed=embed)
+
 @tasks.loop(hours=24)
 async def send_out_deferred_cheating():
     all_marriages = MARRIAGE_MANAGER.get_marriages()
     for marriage in all_marriages:
         for member in marriage.people:
-            deferred = preferences.manager.get_user(member).defer_cheating_alerts.get()
-            if deferred or len(marriage.people) > 2:
-                header = "# Cheating stats for the last 24h"
-                embed = discord.Embed(title=None)
-                bad_relationship_score = 0
-                total_cheats = 0
-                for cheater in marriage.cheating:
-                    value = marriage.cheating[cheater]
-                    if cheater != str(member):
-                        total_cheats += value
-                        plural = "s"
-                        if value == 1:
-                            plural = ""
-                        embed.add_field(inline=True,name="Cheater",value=f"> <@{cheater}>\n> Cheated: {value} time{plural}")
-                if total_cheats > 50:
-                    bad_relationship_score = 1
-                if total_cheats > 100:
-                    bad_relationship_score = 2
-                if total_cheats > 200:
-                    bad_relationship_score = 3
-                if total_cheats > 500:
-                    bad_relationship_score = 4
-                if total_cheats > 1000:
-                    bad_relationship_score = 5
-                message_text = header+f"\n- Total cheating incidents: {total_cheats}\n- Bad relationship score: {bad_relationship_score}/5"
-                user = await bot.fetch_user(member)
-                try:
-                    await user.send(content=message_text,embed=embed)
-                except:
-                    await user.send(content=message_text+"\n-# (no one cheated)",embed=embed)
+            await send_cheating_stats(marriage,member)
         marriage.flush_cheating()
                 
 
