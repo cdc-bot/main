@@ -10,12 +10,23 @@ class Availability:
     available = False
     cheating = False
     reason = ""
+    def __init__(self):
+        self.available = False
+        self.cheating = False
+        self.reason = ""
 
 class MarriageProposal:
     proposer = 0
     recipient = 0
     channel_id = 0
     message_id = 0
+    processing = False
+    def __init__(self):
+        self.proposer = 0
+        self.recipient = 0
+        self.channel_id = 0
+        self.message_id = 0
+        self.processing = False
 
 WAITING_FOR_REACTION: list[MarriageProposal] = []
 
@@ -45,7 +56,8 @@ class Marriage:
 
     def flush_cheating(self):
         for cheating_entry in self.cheating:
-            cheating_entry = 0
+            self.cheating[cheating_entry] = 0
+        MARRIAGE_MANAGER.save()
     
     def is_full(self) -> bool:
         poly = self.all_polyamorous()
@@ -150,7 +162,7 @@ class MarriageManager:
         partners = marriage.get_user_partners(user)
         marriage.register_cheating(user)
         for partner in partners:
-            if not preferences.manager.get_user(partner).defer_cheating_alerts.get():
+            if not preferences.manager.get_user(partner).defer_cheating_alerts.get() or len(marriage.people)>2:
                 user = await bot.fetch_user(partner)
                 await user.send(msg)
     
@@ -302,7 +314,7 @@ class Marriages(commands.Cog):
         body = ""
         for marriage in MARRIAGE_MANAGER.get_marriages():
             body += "\n" + marriage.to_string()
-        await i.response.send_message(header+body)
+        await i.response.send_message(header+body,ephemeral=True)
 
             
 
@@ -325,7 +337,7 @@ class Marriages(commands.Cog):
                 partner_u = await bot.fetch_user(partner)
                 await partner_u.send(f"# Your partner has divorced you\n{i.user.mention} has divorced you. {reason_text}")
             divorcee = f"<@{partner}>"
-            if partners > 1:
+            if len(partners) > 1:
                 divorcee = "your partners and left the marriage."
             await i.response.send_message(f"# Divorce succeded.\nYou've successfully divorced {divorcee}.",ephemeral=True)
             await i.user.send(f"# Divorced\nYou've divorced {divorcee}\n{reason_text2}")
@@ -359,12 +371,14 @@ class Marriages(commands.Cog):
             proposal.recipient = user.id
             proposal.channel_id = message.channel.id
             proposal.message_id = message.id
+            proposal.processing = False
 
             WAITING_FOR_REACTION.append(proposal)
         else:
+            await i.response.send_message(availability.reason,ephemeral=True)
             if availability.cheating:
                 await MARRIAGE_MANAGER.send_cheating_msg_to_partners(i.user.id,f"# Cheating notice\nYour partner, {i.user.mention}, has attempted to cheat on you by proposing to {user.mention}.s")
-            await i.response.send_message(availability.reason)
+            
     
         
 
@@ -373,14 +387,16 @@ class Marriages(commands.Cog):
     async def on_reaction_add(self,reaction: discord.Reaction,user: discord.User):
         proposal = None
         for p in WAITING_FOR_REACTION:
-            if p.message_id == reaction.message.id:
+            if p.message_id == reaction.message.id and not p.processing:
                 proposal = p
+                p.processing = True
+                break
         if proposal == None:
             # not a proposal message
             marriage = MARRIAGE_MANAGER.get_marriage(user.id)
             
             if marriage != None:
-                if reaction.message.author.id not in marriage.get_user_partners(user.id):
+                if not reaction.message.author.bot and reaction.message.author.id not in marriage.get_user_partners(user.id):
                     await MARRIAGE_MANAGER.send_cheating_msg_to_partners(user.id,f"# Possible cheating suspected\nYour partner, <@{user.id}>, has reacted to another person outside of your marriage's message. You can review it here: {reaction.message.jump_url}")
                 
             return
@@ -409,7 +425,7 @@ class Marriages(commands.Cog):
                 resulting_marriage = MARRIAGE_MANAGER.get_marriage(proposal.proposer)
                 WAITING_FOR_REACTION.remove(proposal)
 
-                welcome_to_marriage = f"# Welcome to marriage!\n## So you got married! What now?\nSo, you HAVE to be loyal to each other! Any attempts at cheating (reacting to someone else, pinging someone else, proposing to someone else) will be sent in DMs to your partner!\nIf at any time things between you two are getting tense, you can always **/divorce**.\n\n-# Happy marriage! And remember that this is just a joke command and nothing serious, treat each other well :)\n-# Marriage: {resulting_marriage.to_string()}> 💍"
+                welcome_to_marriage = f"# Welcome to marriage!\n## So you got married! What now?\nSo, you HAVE to be loyal to each other! Any attempts at cheating (reacting to someone else, pinging someone else, proposing to someone else) will be sent in DMs to your partner!\nIf at any time things between you two are getting tense, you can always **/divorce**.\n\n-# Happy marriage! And remember that this is just a joke command and nothing serious, treat each other well :)\n-# Marriage: {resulting_marriage.to_string()} 💍"
 
                 #remove active proposals for non polyamorous couples
                 if not poly:
@@ -452,6 +468,7 @@ class Marriages(commands.Cog):
         else:
             await reaction.remove(user)
             return
+        proposal.processing = False
         
     @commands.Cog.listener()
     async def on_message(self,m: discord.Message):
@@ -467,16 +484,50 @@ class Marriages(commands.Cog):
             if m.reference != None:
                 try:
                     message = await m.channel.fetch_message(m.reference.message_id)
-                    if message.author.id not in partners:
+                    if message.author.id not in partners and not message.author.bot:
                         is_reply_cheating = True
                 except:
                     print("failed to get reply")
             if is_mention_cheating or is_reply_cheating:
                 await MARRIAGE_MANAGER.send_cheating_msg_to_partners(m.author.id,f"# Possible cheating suspected\nYour partner, <@{m.author.id}>, has replied to/mentioned another person outside of your marriage, you might want to go take a look! {m.jump_url}")
 
-            
+@tasks.loop(hours=24)
+async def send_out_deferred_cheating():
+    all_marriages = MARRIAGE_MANAGER.get_marriages()
+    for marriage in all_marriages:
+        for member in marriage.people:
+            deferred = preferences.manager.get_user(member).defer_cheating_alerts.get()
+            if deferred or len(marriage.people) > 2:
+                header = "# Cheating stats"
+                embed = discord.Embed(title=None)
+                bad_relationship_score = 0
+                total_cheats = 0
+                for cheater in marriage.cheating:
+                    value = marriage.cheating[cheater]
+                    if cheater != member:
+                        total_cheats += value
+                        plural = "s"
+                        if value == 1:
+                            plural = ""
+                        embed.add_field(inline=True,name="Cheater",value=f"> Person: <@{cheater}>\n> Cheated: {value} time{plural}")
+                if total_cheats > 50:
+                    bad_relationship_score = 1
+                if total_cheats > 100:
+                    bad_relationship_score = 2
+                if total_cheats > 200:
+                    bad_relationship_score = 3
+                if total_cheats > 500:
+                    bad_relationship_score = 4
+                if total_cheats > 1000:
+                    bad_relationship_score = 5
+                message_text = header+f"\nBad relationship score: {bad_relationship_score}/5"
+                user = await bot.fetch_user(member)
+                await user.send(content=message_text,embed=embed)
+        marriage.flush_cheating()
+                
 
 async def setup(_bot:commands.Bot):
     global bot
     bot = _bot
     await bot.add_cog(Marriages())
+    send_out_deferred_cheating.start()
