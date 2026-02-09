@@ -384,7 +384,7 @@ class Marriages(commands.Cog):
         else:
             await i.response.send_message(availability.reason,ephemeral=True)
             if availability.cheating:
-                await MARRIAGE_MANAGER.send_cheating_msg_to_partners(i.user.id,f"# Cheating notice\nYour partner, {i.user.mention}, has attempted to cheat on you by proposing to {user.mention}.s")
+                await MARRIAGE_MANAGER.send_cheating_msg_to_partners(i.user.id,f"# Cheating notice\nYour partner, {i.user.mention}, has attempted to cheat on you by proposing to {user.mention}.")
             
     
         
