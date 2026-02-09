@@ -205,6 +205,10 @@ class MarriageManager:
                 result.reason = "you're a cheater"
                 result.cheating = True
                 return result
+            if not user_poly:
+                result.available = False
+                result.reason = "they're not polyamorous"
+                return result
             if not proposer_poly:
                 result.available = False
                 result.reason = "you're not polyamorous"
