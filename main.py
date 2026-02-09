@@ -40,7 +40,7 @@ async def on_ready():
     await bot.load_extension("currency")
     await bot.load_extension("marriages")
     #bot.load_extension("wordgame")
-    await bot.tree.sync()
+    #await bot.tree.sync()
     status_change.start()
         
 SPAM_REDUCTION = []
