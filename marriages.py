@@ -70,7 +70,7 @@ class Marriage:
     
     def add_user(self,id) -> bool:
         full = self.is_full()
-        if not full:
+        if not full and not id in self.people:
             self.people.append(id)
             MARRIAGE_MANAGER.save()
             return True
