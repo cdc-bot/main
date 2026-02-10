@@ -155,7 +155,10 @@ class MarriageManager:
         partners = self.get_marriage(user).get_user_partners(user)
         for partner in partners:
             user = await bot.fetch_user(partner)
-            await user.send(msg)
+            try:
+                await user.send(msg)
+            except:
+                print("couldn't send to partner")
 
     async def send_cheating_msg_to_partners(self,user,msg) -> None:
         marriage = self.get_marriage(user)
@@ -164,7 +167,10 @@ class MarriageManager:
         for partner in partners:
             if not preferences.manager.get_user(partner).defer_cheating_alerts.get() and len(marriage.people)<=2:
                 user = await bot.fetch_user(partner)
-                await user.send(msg)
+                try:
+                    await user.send(msg)
+                except:
+                    print("couldn't send cheating message")
     
     def get_marriage(self,user) -> Marriage:
         for marriage in self.marriages:
@@ -457,7 +463,10 @@ class Marriages(commands.Cog):
                             await message.clear_reactions()
                             WAITING_FOR_REACTION.remove(p)
                     proposeruser = await bot.fetch_user(proposal.proposer)
-                    await proposeruser.send(welcome_to_marriage)
+                    try:
+                        await proposeruser.send(welcome_to_marriage)
+                    except:
+                        print("couldn't send welcome message")
                     await MARRIAGE_MANAGER.send_to_partners(proposeruser.id,welcome_to_marriage)
                 else:
                     proposeruser = await bot.fetch_user(proposal.proposer)
@@ -465,8 +474,12 @@ class Marriages(commands.Cog):
                     if invited:
                         otheruser = proposal.recipient
                         proposeruser = await bot.fetch_user(proposal.recipient)
-                    await proposeruser.send(welcome_to_marriage)
+                    try:
+                        await proposeruser.send(welcome_to_marriage)
+                    except:
+                        print("couldn't send welcome message")
                     await MARRIAGE_MANAGER.send_to_partners(proposeruser.id,f"# New member in marriage!\n <@{otheruser}> has joined your marriage! {proposal_message.jump_url}")
+                
                 proposal.processing = False
                 return
             if is_deny:
@@ -535,9 +548,12 @@ async def send_cheating_stats(marriage: Marriage,member:int):
     message_text = header+f"\n- Total cheating incidents: {total_cheats}\n- Bad relationship score: {bad_relationship_score}/5"
     user = await bot.fetch_user(member)
     try:
-        await user.send(content=message_text,embed=embed)
+        try:
+            await user.send(content=message_text,embed=embed)
+        except:
+            await user.send(content=message_text+"\n-# (no one cheated)",embed=embed)
     except:
-        await user.send(content=message_text+"\n-# (no one cheated)",embed=embed)
+        print("couldn't deliver cheating stats")
 
 @tasks.loop(hours=24)
 async def send_out_deferred_cheating():
