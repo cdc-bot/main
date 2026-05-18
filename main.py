@@ -40,6 +40,7 @@ async def on_ready():
     await bot.load_extension("currency")
     await bot.load_extension("marriages")
     #bot.load_extension("wordgame")
+    await bot.load_extension("server_preferences")
     #await bot.tree.sync()
     status_change.start()
         
@@ -222,11 +223,14 @@ async def on_message(m: discord.Message):
     confusedReact = False
     useSend = False
     if m.reference != None:
-        message = await m.channel.fetch_message(m.reference.message_id)
-        if message.author == bot.user:
-            reply = True
-        if message.content == NO_RESPONSE_SET and message.author == bot.user:
-            confusedReact = True
+        try:
+            message = await m.channel.fetch_message(m.reference.message_id)
+            if message.author == bot.user:
+                reply = True
+            if message.content == NO_RESPONSE_SET and message.author == bot.user:
+                confusedReact = True
+        except:
+            print("there was no reply in the end :pensive:")
     
     if type(m.channel) == discord.DMChannel:
         useSend = True

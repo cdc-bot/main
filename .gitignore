@@ -3,4 +3,5 @@ marriages.json
 wallets.json
 currency.json
 preferences.json
+server-preferences.json
 .DS_Store

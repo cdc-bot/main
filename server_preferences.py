@@ -129,8 +129,8 @@ class ChangeModal(discord.ui.Modal):
         await interaction.response.send_message("_ _",ephemeral=True,delete_after=0)
         
 class SelectView(discord.ui.View):
-    def __init__(self,uid):
-        self.author_id = uid
+    def __init__(self,uid,userid):
+        self.author_id = userid
         super().__init__()
         options=[]
         server_config = manager.get_server(uid)
@@ -147,14 +147,14 @@ class SelectView(discord.ui.View):
         self.add_item(dropdown)
         #self.add_string_select(placeholder="a",max_values=1,min_values=1,options=["true","false"])
     async def interaction_check(self,i:discord.MessageInteraction):
-        if i.server.id != self.author_id:
+        if i.user.id != self.author_id:
             await i.response.send_message(content="this isn't yours",ephemeral=True)
             return False
         return True
 
 async def preference_autocomp(i:discord.Interaction,current:str):
     global manager
-    server_config = manager.get_server(i.server.id)
+    server_config = manager.get_server(i.guild.id)
     mc = []
     for key in server_config.__dict__:
             val = server_config.__dict__[key]
@@ -166,23 +166,23 @@ async def preference_autocomp(i:discord.Interaction,current:str):
         ret.append(f"{item.name} - {item.type.__name__}")
     return ret[:10]
 
-class Config(commands.Cog):
+class ServerConfig(commands.Cog):
     @app_commands.command()
-    async def config(self,i):
+    async def server_config(self,i):
         """View and configure your server settings."""
         global manager
-        server_config = manager.get_server(i.server.id)
+        server_config = manager.get_server(i.guild.id)
         desc = ""
         for key in server_config.__dict__:
             val = server_config.__dict__[key]
             if isinstance(val,Preference):
                 desc = desc + "\n" + "**" + val.name + "**" + ": " + str(val.value) + "\n-# " + val.description
         embed = discord.Embed(title="Current Configuration",description=desc)
-        await i.response.send_message(embed=embed,view=SelectView(i.server.id),ephemeral=True)
+        await i.response.send_message(embed=embed,view=SelectView(i.guild.id,i.user.id),ephemeral=True)
 
 
 
 async def setup(_bot:commands.Bot):
     global bot
     bot = _bot
-    await bot.add_cog(Config())
+    await bot.add_cog(ServerConfig())
