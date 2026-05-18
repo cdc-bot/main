@@ -7,7 +7,6 @@ import time
 import json
 import datetime
 import logging
-import server_preferences
 
 test = None
 try:
@@ -205,9 +204,9 @@ async def bean(i: discord.Interaction, user: discord.Member):
 
 @bot.tree.command()
 async def manual_wordgame_trigger(i: discord.Interaction,word: str=None):
-    enabled = server_preferences.manager.get_server(i.guild.id).enable_wordgames.value
-    print(enabled)
-    print(i.guild.id)
+    # cursed af
+    import server_preferences
+    enabled = server_preferences.manager.get_server(i.guild.id).enable_wordgames.get()
     if not enabled:
         await i.response.send_message("wordgames are not allowed in this server",ephemeral=True)
         return

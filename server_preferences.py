@@ -62,13 +62,13 @@ class ServerServerPreferencesManager:
             self.save()
             return self.servers[str(id)]
     def save(self):
-        file = open("./server-ServerPreferences.json","w")
+        file = open("./server-preferences.json","w")
         c = self.to_json()
         file.write(c)
         file.close()
     def try_load(self):
         try:
-            file = open("./server-ServerPreferences.json","r")
+            file = open("./server-preferences.json","r")
             c = file.read()
             file.close()
             j = json.loads(c)
@@ -156,7 +156,7 @@ class SPSelectView(discord.ui.View):
             return False
         return True
 
-async def ServerPreference_autocomp(i:discord.Interaction,current:str):
+async def preference_autocomp(i:discord.Interaction,current:str):
     global manager
     server_config = manager.get_server(i.guild.id)
     mc = []
