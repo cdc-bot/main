@@ -5,7 +5,7 @@ import json
 
 bot = None
 
-class Preference:
+class ServerPreference:
     def __init__(self,name,type,default,desc):
         self.name = name
         self.type = type
@@ -26,50 +26,54 @@ class Preference:
             self.value = value
             
 
-class ServerPreferences:
+class ServerServerPreferences:
     def __init__(self):
-        self.cat_posting_on = Preference("Enable Cat Posting",bool,False,"Enabled cat posting in the current server.")
+        self.enable_wordgames = ServerPreference("Enable Wordgames",bool,True,"Enabled wordgames in the current server.")
+        self.enable_auto_responses = ServerPreference("Enable Auto-responses",bool,True,"Enabled cdc-bot auto responses in the current server.")
+        self.cat_posting_on = ServerPreference("Enable Cat Posting",bool,False,"Enabled cat posting in the current server.")
+        self.cat_posting_id = ServerPreference("Cat Posting Channel ID",int,0,"The ID for the channel where the cats should be sent.")
+        self.cat_submissions_id = ServerPreference("Cat Submission Channel ID",int,0,"The ID for the channel where the cat submissions will be reviewed.")
     def from_json(self,dict):
         for key in dict:
             try:
                 self.__dict__[key].set_impl(dict[key])
             except KeyError:
-                print("key",key,"removed - preferences")
+                print("key",key,"removed - ServerPreferences")
     def to_json_safe_dict(self):
         dict = {}
         for key in self.__dict__:
-            if isinstance(self.__dict__[key],Preference):
+            if isinstance(self.__dict__[key],ServerPreference):
                 dict[key] = self.__dict__[key].get()
         return dict
             
     
-class ServerPreferencesManager:
+class ServerServerPreferencesManager:
     def __init__(self):
         global manager
         manager = self
         self.servers = {}
         self.try_load()
         self.save()
-    def get_server(self,id) -> ServerPreferences:
+    def get_server(self,id) -> ServerServerPreferences:
         try:
             return self.servers[str(id)]
         except:
-            self.servers[str(id)] = ServerPreferences()
+            self.servers[str(id)] = ServerServerPreferences()
             self.save()
             return self.servers[str(id)]
     def save(self):
-        file = open("./server-preferences.json","w")
+        file = open("./server-ServerPreferences.json","w")
         c = self.to_json()
         file.write(c)
         file.close()
     def try_load(self):
         try:
-            file = open("./server-preferences.json","r")
+            file = open("./server-ServerPreferences.json","r")
             c = file.read()
             file.close()
             j = json.loads(c)
             for server in j:
-                up = ServerPreferences()
+                up = ServerServerPreferences()
                 up.from_json(j[server])
                 self.servers[server] = up
         except:
@@ -81,9 +85,9 @@ class ServerPreferencesManager:
             dict[key] = self.servers[key].to_json_safe_dict()
         return json.dumps(dict,indent=4)
 
-manager = ServerPreferencesManager()
+manager = ServerServerPreferencesManager()
 
-class SelectDropdown(discord.ui.Select):
+class SPSelectDropdown(discord.ui.Select):
     settings = None
     def carry_settings(self,settings):
         self.settings = settings
@@ -93,10 +97,10 @@ class SelectDropdown(discord.ui.Select):
         for stg in self.settings.__dict__:
             if self.settings.__dict__[stg].name == settingname:
                 setting = self.settings.__dict__[stg]
-        modal = ChangeModal(setting,interaction)
+        modal = SPChangeModal(setting,interaction)
         await interaction.response.send_modal(modal)
 
-class ChangeModal(discord.ui.Modal):
+class SPChangeModal(discord.ui.Modal):
     new_value = discord.ui.TextInput(label="New value",custom_id="new_value")
     def __init__(self,setting,dd_interaction:discord.Interaction):
         self.setting = setting
@@ -128,7 +132,7 @@ class ChangeModal(discord.ui.Modal):
         await self.dd_interaction.edit_original_response(content=f"**{self.setting.name}** is now set to `{self.setting.value}`.",embeds=[],view=None)
         await interaction.response.send_message("_ _",ephemeral=True,delete_after=0)
         
-class SelectView(discord.ui.View):
+class SPSelectView(discord.ui.View):
     def __init__(self,uid,userid):
         self.author_id = userid
         super().__init__()
@@ -136,13 +140,13 @@ class SelectView(discord.ui.View):
         server_config = manager.get_server(uid)
         for key in server_config.__dict__:
             val = server_config.__dict__[key]
-            if isinstance(val,Preference):
+            if isinstance(val,ServerPreference):
                 label = val.name
                 emoji = "🎛️"
                 description = f"{val.value} | {val.type.__name__}"
                 options.append(discord.SelectOption(label=label,emoji=emoji,description=description))
         #discord.SelectOption(label="Option 1",emoji="👌",description="This is option 1!"),
-        dropdown = SelectDropdown(placeholder="Select a setting to change",max_values=1,min_values=1,options=options)
+        dropdown = SPSelectDropdown(placeholder="Select a setting to change",max_values=1,min_values=1,options=options)
         dropdown.carry_settings(server_config)
         self.add_item(dropdown)
         #self.add_string_select(placeholder="a",max_values=1,min_values=1,options=["true","false"])
@@ -152,13 +156,13 @@ class SelectView(discord.ui.View):
             return False
         return True
 
-async def preference_autocomp(i:discord.Interaction,current:str):
+async def ServerPreference_autocomp(i:discord.Interaction,current:str):
     global manager
     server_config = manager.get_server(i.guild.id)
     mc = []
     for key in server_config.__dict__:
             val = server_config.__dict__[key]
-            if isinstance(val,Preference):
+            if isinstance(val,ServerPreference):
                 if val.name.lower().find(current) != -1 or current == "":
                     mc.append(val)
     ret = []
@@ -175,10 +179,10 @@ class ServerConfig(commands.Cog):
         desc = ""
         for key in server_config.__dict__:
             val = server_config.__dict__[key]
-            if isinstance(val,Preference):
+            if isinstance(val,ServerPreference):
                 desc = desc + "\n" + "**" + val.name + "**" + ": " + str(val.value) + "\n-# " + val.description
         embed = discord.Embed(title="Current Configuration",description=desc)
-        await i.response.send_message(embed=embed,view=SelectView(i.guild.id,i.user.id),ephemeral=True)
+        await i.response.send_message(embed=embed,view=SPSelectView(i.guild.id,i.user.id),ephemeral=True)
 
 
 
