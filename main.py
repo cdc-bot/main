@@ -104,10 +104,16 @@ async def update_wordgames(message:discord.Message):
                 continue
             if len(game.messages) != 0:
                 if game.messages[len(game.messages)-1].author.id == message.author.id:
-                    await message.delete()
+                    try:
+                        await message.delete()
+                    except:
+                        print("doesnt exist")
                     continue
             if message.content.lower() != game.word.lower() or message.author.bot:
-                await message.delete()
+                try:
+                    await message.delete()
+                except:
+                    print("doesn't exist")
                 continue
             game.messages.append(message)
             if len(game.messages) >= game.times:
@@ -242,6 +248,11 @@ async def on_message(m: discord.Message):
     if type(m.channel) == discord.DMChannel:
         useSend = True
         reply = True
+    else:
+        import server_preferences
+        if not server_preferences.manager.get_server(m.guild.id).enable_auto_responses.get():
+            print("skipping auto response - server turned them off")
+            return
     
 
     if m.content.find(bot.user.mention) != -1 or reply == True:
